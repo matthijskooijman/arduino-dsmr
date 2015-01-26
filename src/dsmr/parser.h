@@ -168,6 +168,35 @@ struct ObisIdParser {
   }
 };
 
+struct CrcParser {
+  static const size_t CRC_LEN = 4;
+
+  // Parse a crc value. str must point to the first of the four hex
+  // bytes in the CRC.
+  static ParseResult<uint16_t> parse(const char *str, const char *end) {
+    ParseResult<uint16_t> res;
+    // This should never happen with the code in this library, but
+    // check anyway
+    if (str + CRC_LEN > end)
+      return res.fail(F("No checksum found"), str);
+
+    // A bit of a messy way to parse the checksum, but all
+    // integer-parse functions assume nul-termination
+    char buf[CRC_LEN + 1];
+    memcpy(buf, str, CRC_LEN);
+    buf[CRC_LEN] = '\0';
+    char *endp;
+    uint16_t check = strtoul(buf, &endp, 16);
+
+    // See if all four bytes formed a valid number
+    if (endp != buf + CRC_LEN)
+      return res.fail(F("Incomplete or malformed checksum"), str);
+
+    res.next = str + CRC_LEN;
+    return res.succeed(check);
+  }
+};
+
 struct P1Parser {
   /**
     * Parse a complete P1 telegram. The string passed should start
@@ -191,25 +220,16 @@ struct P1Parser {
       crc = _crc16_update(crc, *data_end);
       ++data_end;
     }
-    // p now points to ! or past the end of the string. We need 4 more
-    // characters for the checksum
-    if (data_end + 4 >= str + n)
-      return res.fail(F("No checksum found"), str);
 
-    // A bit of a messy way to parse the checksum, but all
-    // integer-parse functions assume nul-termination
-    char buf[5];
-    memcpy(buf, data_end + 1, 4);
-    buf[4] = '\0';
-    char *endp;
-    uint16_t check = strtoul(buf, &endp, 16);
+    if (data_end >= str + n)
+      return res.fail(F("No checksum found"));
 
-    // See if all four bytes formed a valid number
-    if (endp != buf + 4)
-      return res.fail(F("Incomplete or malformed checksum"), data_end);
+    ParseResult<uint16_t> check_res = CrcParser::parse(data_end + 1, str + n);
+    if (check_res.err)
+      return check_res;
 
     // Check CRC
-    if (false && check != crc)
+    if (false && check_res.result != crc)
       return res.fail(F("Checksum mismatch"), data_end);
 
     // Split into lines and parse those
