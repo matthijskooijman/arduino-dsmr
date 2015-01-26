@@ -232,11 +232,24 @@ struct P1Parser {
     if (false && check_res.result != crc)
       return res.fail(F("Checksum mismatch"), data_end);
 
+    res = parse_data(data, data_start, data_end);
+    res.next = check_res.next;
+    return res;
+  }
+
+  /**
+   * Parse the data part of a message. Str should point to the first
+   * character after the leading /, end should point to the ! before the
+   * checksum. Does not verify the checksum.
+   */
+  template <typename... Ts>
+  static ParseResult<void> parse_data(ParsedData<Ts...> *data, const char *str, const char *end) {
+    ParseResult<void> res;
     // Split into lines and parse those
-    const char *line_end = data_start, *line_start = data_start;
+    const char *line_end = str, *line_start = str;
 
     // Parse ID line
-    while (line_end < data_end) {
+    while (line_end < end) {
       if (*line_end == '\r' || *line_end == '\n') {
         // The first identification line looks like:
         // XXX5<id string>
@@ -262,7 +275,7 @@ struct P1Parser {
     }
 
     // Parse data lines
-    while (line_end < data_end) {
+    while (line_end < end) {
       if (*line_end == '\r' || *line_end == '\n') {
         ParseResult<void> tmp = parse_line(data, line_start, line_end);
         if (tmp.err)
