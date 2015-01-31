@@ -73,7 +73,7 @@ struct p1_version : StringField<p1_version, 2, 2> {
   String p1_version;
   static constexpr ObisId id = ObisId(1, 3, 0, 2, 8);
   static constexpr char name[] = "p1_version";
-  String val() { return p1_version; }
+  String& val() { return p1_version; }
 };
 
 struct identification : ParsedField<identification> {
