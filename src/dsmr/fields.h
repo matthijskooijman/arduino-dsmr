@@ -47,35 +47,32 @@ struct ParsedField {
   }
 };
 
+template <typename T, size_t minlen, size_t maxlen>
+struct StringField : ParsedField<T> {
+  ParseResult<void> parse(const char *str, const char *end) {
+    ParseResult<String> res = StringParser::parse_string(minlen, maxlen, str, end);
+    if (!res.err)
+      static_cast<T*>(this)->get() = res.result;
+    return res;
+  }
+};
+
 // TODO: Put the name fields in PROGMEM. Simply using F() isn't allowed
 // outside functions, so this is a bit tricky to get right.
 
 namespace fields {
 
-struct equipment_id : ParsedField<equipment_id> {
+struct equipment_id : StringField<equipment_id, 0, 96> {
   String equipment_id;
   static constexpr ObisId id = ObisId(0, 0, 96, 1, 1);
   static constexpr char name[] = "equipment_id";
-
-  ParseResult<void> parse(const char *str, const char *end) {
-    ParseResult<String> res = StringParser::parse_string(0, 96, str, end);
-    equipment_id = res.result;
-    return res;
-  }
-
   String& get() { return equipment_id; }
 };
 
-struct p1_version : ParsedField<p1_version> {
+struct p1_version : StringField<p1_version, 2, 2> {
   String p1_version;
   static constexpr ObisId id = ObisId(1, 3, 0, 2, 8);
   static constexpr char name[] = "p1_version";
-
-  ParseResult<void> parse(const char *str, const char *end) {
-    ParseResult<String> res = StringParser::parse_string(2, 2, str, end);
-    p1_version = res.result;
-    return res;
-  }
   String get() { return p1_version; }
 };
 
@@ -87,6 +84,7 @@ struct identification : ParsedField<identification> {
   static constexpr char name[] = "identification";
 
   ParseResult<void> parse(const char *str, const char *end) {
+    // Just copy the string verbatim value without any parsing
     concat_hack(identification, str, end - str);
     return ParseResult<void>();
   }
