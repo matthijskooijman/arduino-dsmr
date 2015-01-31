@@ -41,7 +41,7 @@ String raw =
   "0-1:96.1.0(0000000000000000000000000000000000)\r\n"
   "0-1:24.2.1(150117180000W)(00473.789*m3)\r\n"
   "0-1:24.4.0(1)\r\n"
-  "!BCD1\r\n";
+  "!6F4A\r\n";
 
 /**
  * Define the data we're interested in, as well as the datastructure to
