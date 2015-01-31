@@ -215,7 +215,7 @@ struct P1Parser {
 
     // Look for ! that terminates the data
     const char *data_end = data_start;
-    uint16_t crc = 0;
+    uint16_t crc = _crc16_update(0, *str); // Include the / in CRC
     while (data_end < str + n && *data_end != '!') {
       crc = _crc16_update(crc, *data_end);
       ++data_end;
@@ -223,6 +223,8 @@ struct P1Parser {
 
     if (data_end >= str + n)
       return res.fail(F("No checksum found"));
+
+    crc = _crc16_update(crc, *data_end); // Include the ! in CRC
 
     ParseResult<uint16_t> check_res = CrcParser::parse(data_end + 1, str + n);
     if (check_res.err)
