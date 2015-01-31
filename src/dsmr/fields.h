@@ -52,7 +52,7 @@ struct StringField : ParsedField<T> {
   ParseResult<void> parse(const char *str, const char *end) {
     ParseResult<String> res = StringParser::parse_string(minlen, maxlen, str, end);
     if (!res.err)
-      static_cast<T*>(this)->get() = res.result;
+      static_cast<T*>(this)->val() = res.result;
     return res;
   }
 };
@@ -66,14 +66,14 @@ struct equipment_id : StringField<equipment_id, 0, 96> {
   String equipment_id;
   static constexpr ObisId id = ObisId(0, 0, 96, 1, 1);
   static constexpr char name[] = "equipment_id";
-  String& get() { return equipment_id; }
+  String& val() { return equipment_id; }
 };
 
 struct p1_version : StringField<p1_version, 2, 2> {
   String p1_version;
   static constexpr ObisId id = ObisId(1, 3, 0, 2, 8);
   static constexpr char name[] = "p1_version";
-  String get() { return p1_version; }
+  String val() { return p1_version; }
 };
 
 struct identification : ParsedField<identification> {
@@ -89,7 +89,7 @@ struct identification : ParsedField<identification> {
     return ParseResult<void>();
   }
 
-  String& get() { return identification; }
+  String& val() { return identification; }
 };
 
 } // namespace fields

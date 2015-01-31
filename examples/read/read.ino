@@ -46,7 +46,7 @@ struct Printer {
   void apply(Item &i) {
     Serial.print(Item::name);
     Serial.print(F(": "));
-    Serial.print(i.get());
+    Serial.print(i.val());
     Serial.println();
   }
 };
