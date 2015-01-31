@@ -231,7 +231,7 @@ struct P1Parser {
       return check_res;
 
     // Check CRC
-    if (false && check_res.result != crc)
+    if (check_res.result != crc)
       return res.fail(F("Checksum mismatch"), data_end);
 
     res = parse_data(data, data_start, data_end);
