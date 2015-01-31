@@ -33,6 +33,7 @@
 #define DSMR_INCLUDE_DSMR_H
 
 #include "dsmr/parser.h"
+#include "dsmr/reader.h"
 #include "dsmr/fields.h"
 
 // Allow using everything without the namespace prefixes
