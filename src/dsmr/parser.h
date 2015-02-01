@@ -69,14 +69,14 @@ struct ParsedData;
 template<>
 struct ParsedData<> {
   ParseResult<void> parse_line(const ObisId& id, const char *str, const char *end) {
-  // Parsing succeeded, but found no matching handler (so return
-  // set the next pointer to show nothing was parsed).
-  return ParseResult<void>().until(str);
+    // Parsing succeeded, but found no matching handler (so return
+    // set the next pointer to show nothing was parsed).
+    return ParseResult<void>().until(str);
   }
 
   template<typename F>
   void applyEach(F f) {
-  // Nothing to do
+    // Nothing to do
   }
 };
 
@@ -92,15 +92,15 @@ struct ParsedData<T, Ts...> : public T, ParsedData<Ts...> {
    * parses the value and stores it in the field.
    */
   ParseResult<void> parse_line(const ObisId& id, const char *str, const char *end) {
-  if (id == T::id)
-    return T::parse(str, end);
-  return ParsedData<Ts...>::parse_line(id, str, end);
+    if (id == T::id)
+      return T::parse(str, end);
+    return ParsedData<Ts...>::parse_line(id, str, end);
   }
 
   template<typename F>
   void applyEach(F f) {
-  T::apply(f);
-  return ParsedData<Ts...>::applyEach(f);
+    T::apply(f);
+    return ParsedData<Ts...>::applyEach(f);
   }
 };
 
