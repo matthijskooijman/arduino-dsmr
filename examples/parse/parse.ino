@@ -125,11 +125,13 @@ using MyData = ParsedData<
 struct Printer {
   template<typename Item>
   void apply(Item &i) {
-    Serial.print(Item::name);
-    Serial.print(F(": "));
-    Serial.print(i.val());
-    Serial.print(Item::unit());
-    Serial.println();
+    if (i.present()) {
+      Serial.print(Item::name);
+      Serial.print(F(": "));
+      Serial.print(i.val());
+      Serial.print(Item::unit());
+      Serial.println();
+    }
   }
 };
 
