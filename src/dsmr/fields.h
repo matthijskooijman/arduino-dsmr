@@ -45,6 +45,8 @@ struct ParsedField {
   void apply(F& f) {
     f.apply(*static_cast<T*>(this));
   }
+  // By defaults, fields have no unit
+  static const char *unit() { return ""; }
 };
 
 template <typename T, size_t minlen, size_t maxlen>
@@ -55,6 +57,61 @@ struct StringField : ParsedField<T> {
       static_cast<T*>(this)->val() = res.result;
     return res;
   }
+};
+
+// A timestamp is essentially a string using YYMMDDhhmmssX format (where
+// X is W or S for wintertime or summertime). Parsing this into a proper
+// (UNIX) timestamp is hard to do generically. Parsing it into a
+// single integer needs > 4 bytes top fit and isn't very useful (you
+// cannot really do any calculation with those values). So we just parse
+// into a string for now.
+template <typename T>
+struct TimestampField : StringField<T, 13, 13> { };
+
+// Value that is parsed as a three-decimal float, but stored as an
+// integer (by multiplying by 1000). Supports val() (or implicit cast to
+// float) to get the original value, and int_val() to get the more
+// efficient integer value. The unit() and int_unit() methods on
+// FixedField return the corresponding units for these values.
+struct FixedValue {
+  operator float() { return val();}
+  float val() { return _value / 1000.0;}
+  uint32_t int_val() { return _value; }
+
+  uint32_t _value;
+};
+
+// Floating point numbers in the message never have more than 3 decimal
+// digits. To prevent inefficient floating point operations, we store
+// them as a fixed-point number: an integer that stores the value in
+// thousands. For example, a value of 1.234 kWh is stored as 1234. This
+// effectively means that the integer value is het value in Wh. To allow
+// automatic printing of these values, both the original unit and the
+// integer unit is passed as a template argument.
+template <typename T, const char *_unit, const char *_int_unit>
+struct FixedField : ParsedField<T> {
+  ParseResult<void> parse(const char *str, const char *end) {
+    ParseResult<uint32_t> res = NumParser::parse(3, _unit, str, end);
+    if (!res.err)
+      static_cast<T*>(this)->val()._value = res.result;
+    return res;
+  }
+
+  static const char *unit() { return _unit; }
+  static const char *int_unit() { return _int_unit; }
+};
+
+// A integer number is just represented as an integer.
+template <typename T, const char *_unit>
+struct IntField : ParsedField<T> {
+  ParseResult<void> parse(const char *str, const char *end) {
+    ParseResult<uint32_t> res = NumParser::parse(0, _unit, str, end);
+    if (!res.err)
+      static_cast<T*>(this)->val() = res.result;
+    return res;
+  }
+
+  static const char *unit() { return _unit; }
 };
 
 // TODO: Put the name fields in PROGMEM. Simply using F() isn't allowed

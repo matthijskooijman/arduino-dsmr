@@ -129,6 +129,64 @@ struct StringParser {
   }
 };
 
+struct NumParser {
+  static ParseResult<uint32_t> parse(size_t max_decimals, const char* unit, const char *str, const char *end) {
+    ParseResult<uint32_t> res;
+    if (str >= end || *str != '(')
+      return res.fail(F("Missing ("), str);
+
+    const char *num_start = str + 1; // Skip (
+    const char *num_end = num_start;
+
+    const char sep = unit ? '*' : ')';
+    bool saw_dot  = false;
+    uint32_t value = 0;
+
+    // Parse integer part
+    while(num_end < end && !strchr("*.)", *num_end)) {
+      if (*num_end < '0' || *num_end > '9')
+        return res.fail(F("Invalid number"), num_end);
+      value *= 10;
+      value += *num_end - '0';
+      ++num_end;
+    }
+
+    // Parse decimal part, if any
+    if (max_decimals && num_end < end && *num_end == '.') {
+      ++num_end;
+
+      while(num_end < end && !strchr("*)", *num_end) && max_decimals--) {
+        if (*num_end < '0' || *num_end > '9')
+          return res.fail(F("Invalid number"), num_end);
+        value *= 10;
+        value += *num_end - '0';
+        ++num_end;
+      }
+    }
+
+    // Fill in missing decimals with zeroes
+    while(max_decimals--)
+      value *= 10;
+
+    if (unit && *unit) {
+      if (num_end >= end || *num_end != '*')
+        return res.fail(F("Missing unit"), num_end);
+      const char *unit_start = ++num_end; // skip *
+      while(num_end < end && *num_end != ')' && *unit) {
+        if (*num_end++ != *unit++)
+          return res.fail(F("Invalid unit"), unit_start);
+      }
+      if (*unit)
+        return res.fail(F("Invalid unit"), unit_start);
+    }
+
+    if (num_end >= end || *num_end != ')')
+      return res.fail(F("Extra data"), num_end);
+
+    return res.succeed(value).until(num_end + 1); // Skip )
+  }
+};
+
 struct ObisIdParser {
   static ParseResult<ObisId> parse(const char *str, const char *end) {
     // Parse a Obis ID of the form 1-2:3.4.5.6
