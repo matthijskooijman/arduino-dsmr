@@ -114,40 +114,206 @@ struct IntField : ParsedField<T> {
   static const char *unit() { return _unit; }
 };
 
+// A RawField is not parsed, the entire value (including any
+// parenthesis around it) is returned as a string.
+template <typename T>
+struct RawField : ParsedField<T> {
+  ParseResult<void> parse(const char *str, const char *end) {
+    // Just copy the string verbatim value without any parsing
+    concat_hack(static_cast<T*>(this)->val(), str, end - str);
+    return ParseResult<void>().until(end);
+  }
+};
+
 // TODO: Put the name fields in PROGMEM. Simply using F() isn't allowed
 // outside functions, so this is a bit tricky to get right.
 
 namespace fields {
 
-struct equipment_id : StringField<equipment_id, 0, 96> {
-  String equipment_id;
-  static constexpr ObisId id = ObisId(0, 0, 96, 1, 1);
-  static constexpr char name[] = "equipment_id";
-  String& val() { return equipment_id; }
-};
+constexpr char none[] = "";
+constexpr char kWh[] = "kWh";
+constexpr char Wh[] = "Wh";
+constexpr char kW[] = "kW";
+constexpr char W[] = "W";
+constexpr char V[] = "V";
+constexpr char mV[] = "mV";
+constexpr char A[] = "A";
+constexpr char mA[] = "mA";
+constexpr char m3[] = "m3";
+constexpr char dm3[] = "dm3";
+constexpr char GJ[] = "GJ";
+constexpr char MJ[] = "MJ";
 
-struct p1_version : StringField<p1_version, 2, 2> {
-  String p1_version;
-  static constexpr ObisId id = ObisId(1, 3, 0, 2, 8);
-  static constexpr char name[] = "p1_version";
-  String& val() { return p1_version; }
-};
+const uint8_t GAS_MBUS_ID = 1;
+const uint8_t WATER_MBUS_ID = 2;
+const uint8_t THERMAL_MBUS_ID = 3;
+const uint8_t SLAVE_MBUS_ID = 4;
 
-struct identification : ParsedField<identification> {
-  String identification;
-  // Special (normally invalid) OBIS ID, that is explicitely passed by
-  // DsmrP1Parser::parse for the initial identification line
-  static constexpr ObisId id = ObisId(255, 255, 255, 255, 255, 255);
-  static constexpr char name[] = "identification";
-
-  ParseResult<void> parse(const char *str, const char *end) {
-    // Just copy the string verbatim value without any parsing
-    concat_hack(identification, str, end - str);
-    return ParseResult<void>();
+#define DEFINE_FIELD(fieldname, value_t, obis, field_t, field_args...) \
+  struct fieldname : field_t<fieldname, ##field_args> { \
+    value_t fieldname; \
+    static constexpr ObisId id = obis; \
+    static constexpr char name[] = #fieldname; \
+    value_t& val() { return fieldname; } \
   }
 
-  String& val() { return identification; }
-};
+/* Meter identification. This is not a normal field, but a
+ * specially-formatted first line of the message */
+DEFINE_FIELD(identification, String, ObisId(255, 255, 255, 255, 255, 255), RawField);
+
+/* Version information for P1 output */
+DEFINE_FIELD(p1_version, String, ObisId(1, 3, 0, 2, 8), StringField, 2, 2);
+
+/* Date-time stamp of the P1 message */
+DEFINE_FIELD(timestamp, String, ObisId(0, 0, 1, 0, 0), TimestampField);
+
+/* Equipment identifier */
+DEFINE_FIELD(equipment_id, String, ObisId(0, 0, 96, 1, 1), StringField, 0, 96);
+
+/* Meter Reading electricity delivered to client (Tariff 1) in 0,001 kWh */
+DEFINE_FIELD(energy_delivered_tariff1, FixedValue, ObisId(1, 0, 1, 8, 1), FixedField, kWh, Wh);
+/* Meter Reading electricity delivered to client (Tariff 2) in 0,001 kWh */
+DEFINE_FIELD(energy_delivered_tariff2, FixedValue, ObisId(1, 0, 1, 8, 2), FixedField, kWh, Wh);
+/* Meter Reading electricity delivered by client (Tariff 1) in 0,001 kWh */
+DEFINE_FIELD(energy_returned_tariff1, FixedValue, ObisId(1, 0, 2, 8, 1), FixedField, kWh, Wh);
+/* Meter Reading electricity delivered by client (Tariff 2) in 0,001 kWh */
+DEFINE_FIELD(energy_returned_tariff2, FixedValue, ObisId(1, 0, 2, 8, 2), FixedField, kWh, Wh);
+
+/* Tariff indicator electricity. The tariff indicator can also be used
+ * to switch tariff dependent loads e.g boilers. This is the
+ * responsibility of the P1 user */
+DEFINE_FIELD(electricity_tariff, String, ObisId(0, 0, 96, 14, 0), StringField, 4, 4);
+
+/* Actual electricity power delivered (+P) in 1 Watt resolution */
+DEFINE_FIELD(power_delivered, FixedValue, ObisId(1, 0, 1, 7, 0), FixedField, kW, W);
+/* Actual electricity power received (-P) in 1 Watt resolution */
+DEFINE_FIELD(power_returned, FixedValue, ObisId(1, 0, 2, 7, 0), FixedField, kW, W);
+
+/* The actual threshold Electricity in kW. Removed in 4.0.7 / 4.2.2 / 5.0 */
+DEFINE_FIELD(electricity_threshold, FixedValue, ObisId(0, 0, 17, 0, 0), FixedField, kW, W);
+
+/* Switch position Electricity (in/out/enabled). Removed in 4.0.7 / 4.2.2 / 5.0 */
+DEFINE_FIELD(electricity_switch_position, uint8_t, ObisId(0, 0, 96, 3, 10), IntField, none);
+
+/* Number of power failures in any phase */
+DEFINE_FIELD(electricity_failures, uint32_t, ObisId(0, 0, 96, 7, 21), IntField, none);
+/* Number of long power failures in any phase */
+DEFINE_FIELD(electricity_long_failures, uint32_t, ObisId(0, 0, 96, 7, 9), IntField, none);
+
+/* Power Failure Event Log (long power failures) */
+DEFINE_FIELD(electricity_failure_log, String, ObisId(1, 0, 99, 97, 0), RawField);
+
+/* Number of voltage sags in phase L1 */
+DEFINE_FIELD(electricity_sags_l1, uint32_t, ObisId(1, 0, 32, 32, 0), IntField, none);
+/* Number of voltage sags in phase L2 (polyphase meters only) */
+DEFINE_FIELD(electricity_sags_l2, uint32_t, ObisId(1, 0, 52, 32, 0), IntField, none);
+/* Number of voltage sags in phase L3 (polyphase meters only) */
+DEFINE_FIELD(electricity_sags_l3, uint32_t, ObisId(1, 0, 72, 32, 0), IntField, none);
+
+/* Number of voltage swells in phase L1 */
+DEFINE_FIELD(electricity_swells_l1, uint32_t, ObisId(1, 0, 32, 36, 0), IntField, none);
+/* Number of voltage swells in phase L2 (polyphase meters only) */
+DEFINE_FIELD(electricity_swells_l2, uint32_t, ObisId(1, 0, 52, 36, 0), IntField, none);
+/* Number of voltage swells in phase L3 (polyphase meters only) */
+DEFINE_FIELD(electricity_swells_l3, uint32_t, ObisId(1, 0, 72, 36, 0), IntField, none);
+
+/* Text message codes: numeric 8 digits (Note: Missing from 5.0 spec)
+ * */
+DEFINE_FIELD(message_short, String, ObisId(0, 0, 96, 13, 1), StringField, 0, 16);
+/* Text message max 2048 characters (Note: Spec says 1024 in comment and
+ * 2048 in format spec, so we stick to 2048). */
+DEFINE_FIELD(message_long, String, ObisId(0, 0, 96, 13, 0), StringField, 0, 2048);
+
+/* Instantaneous voltage L1 in 0.1V resolution (Note: Spec says V
+ * resolution in comment, but 0.1V resolution in format spec. Added in
+ * 5.0) */
+DEFINE_FIELD(voltage_l1, FixedValue, ObisId(1, 0, 32, 7, 0), FixedField, V, mV);
+/* Instantaneous voltage L2 in 0.1V resolution (Note: Spec says V
+ * resolution in comment, but 0.1V resolution in format spec. Added in
+ * 5.0) */
+DEFINE_FIELD(voltage_l2, FixedValue, ObisId(1, 0, 52, 7, 0), FixedField, V, mV);
+/* Instantaneous voltage L3 in 0.1V resolution (Note: Spec says V
+ * resolution in comment, but 0.1V resolution in format spec. Added in
+ * 5.0) */
+DEFINE_FIELD(voltage_l3, FixedValue, ObisId(1, 0, 72, 7, 0), FixedField, V, mV);
+
+/* Instantaneous current L1 in A resolution */
+DEFINE_FIELD(current_l1, uint16_t, ObisId(1, 0, 31, 7, 0), IntField, A);
+/* Instantaneous current L2 in A resolution */
+DEFINE_FIELD(current_l2, uint16_t, ObisId(1, 0, 51, 7, 0), IntField, A);
+/* Instantaneous current L3 in A resolution */
+DEFINE_FIELD(current_l3, uint16_t, ObisId(1, 0, 71, 7, 0), IntField, A);
+
+/* Instantaneous active power L1 (+P) in W resolution */
+DEFINE_FIELD(power_delivered_l1, FixedValue, ObisId(1, 0, 21, 7, 0), FixedField, kW, W);
+/* Instantaneous active power L2 (+P) in W resolution */
+DEFINE_FIELD(power_delivered_l2, FixedValue, ObisId(1, 0, 41, 7, 0), FixedField, kW, W);
+/* Instantaneous active power L3 (+P) in W resolution */
+DEFINE_FIELD(power_delivered_l3, FixedValue, ObisId(1, 0, 61, 7, 0), FixedField, kW, W);
+
+/* Instantaneous active power L1 (-P) in W resolution */
+DEFINE_FIELD(power_returned_l1, FixedValue, ObisId(1, 0, 22, 7, 0), FixedField, kW, W);
+/* Instantaneous active power L2 (-P) in W resolution */
+DEFINE_FIELD(power_returned_l2, FixedValue, ObisId(1, 0, 42, 7, 0), FixedField, kW, W);
+/* Instantaneous active power L3 (-P) in W resolution */
+DEFINE_FIELD(power_returned_l3, FixedValue, ObisId(1, 0, 62, 7, 0), FixedField, kW, W);
+
+
+/* Device-Type */
+DEFINE_FIELD(gas_device_type, uint16_t, ObisId(0, GAS_MBUS_ID, 24, 1, 0), IntField, none);
+
+/* Equipment identifier (Gas) */
+DEFINE_FIELD(gas_equipment_id, String, ObisId(0, GAS_MBUS_ID, 96, 1, 0), StringField, 0, 96);
+
+/* Valve position Gas (on/off/released) (Note: Removed in 4.0.7 / 4.2.2 / 5.0). */
+DEFINE_FIELD(gas_valve_position, uint8_t, ObisId(0, GAS_MBUS_ID, 24, 4, 0), IntField, none);
+
+/* Last 5-minute value (temperature converted), gas delivered to client
+ * in m3, including decimal values and capture time (Note: 4.x spec has
+ * "hourly value") */
+DEFINE_FIELD(gas_delivered, TimestampedFixedValue, ObisId(0, GAS_MBUS_ID, 24, 2, 1), TimestampedFixedField, m3, dm3);
+
+
+/* Device-Type */
+DEFINE_FIELD(thermal_device_type, uint16_t, ObisId(0, THERMAL_MBUS_ID, 24, 1, 0), IntField, none);
+
+/* Equipment identifier (Thermal: heat or cold) */
+DEFINE_FIELD(thermal_equipment_id, String, ObisId(0, THERMAL_MBUS_ID, 96, 1, 0), StringField, 0, 96);
+
+/* Valve position (on/off/released) (Note: Removed in 4.0.7 / 4.2.2 / 5.0). */
+DEFINE_FIELD(thermal_valve_position, uint8_t, ObisId(0, THERMAL_MBUS_ID, 24, 4, 0), IntField, none);
+
+/* Last 5-minute Meter reading Heat or Cold in 0,01 GJ and capture time
+ * (Note: 4.x spec has "hourly meter reading") */
+DEFINE_FIELD(thermal_delivered, TimestampedFixedValue, ObisId(0, THERMAL_MBUS_ID, 24, 2, 1), TimestampedFixedField, GJ, MJ);
+
+
+/* Device-Type */
+DEFINE_FIELD(water_device_type, uint16_t, ObisId(0, WATER_MBUS_ID, 24, 1, 0), IntField, none);
+
+/* Equipment identifier (Thermal: heat or cold) */
+DEFINE_FIELD(water_equipment_id, String, ObisId(0, WATER_MBUS_ID, 96, 1, 0), StringField, 0, 96);
+
+/* Valve position (on/off/released) (Note: Removed in 4.0.7 / 4.2.2 / 5.0). */
+DEFINE_FIELD(water_valve_position, uint8_t, ObisId(0, WATER_MBUS_ID, 24, 4, 0), IntField, none);
+
+/* Last 5-minute Meter reading in 0,001 m3 and capture time
+ * (Note: 4.x spec has "hourly meter reading") */
+DEFINE_FIELD(water_delivered, TimestampedFixedValue, ObisId(0, WATER_MBUS_ID, 24, 2, 1), TimestampedFixedField, m3, dm3);
+
+
+/* Device-Type */
+DEFINE_FIELD(slave_device_type, uint16_t, ObisId(0, SLAVE_MBUS_ID, 24, 1, 0), IntField, none);
+
+/* Equipment identifier (Thermal: heat or cold) */
+DEFINE_FIELD(slave_equipment_id, String, ObisId(0, SLAVE_MBUS_ID, 96, 1, 0), StringField, 0, 96);
+
+/* Valve position (on/off/released) (Note: Removed in 4.0.7 / 4.2.2 / 5.0). */
+DEFINE_FIELD(slave_valve_position, uint8_t, ObisId(0, SLAVE_MBUS_ID, 24, 4, 0), IntField, none);
+
+/* Last 5-minute Meter reading Heat or Cold and capture time (e.g. slave
+ * E meter) (Note: 4.x spec has "hourly meter reading") */
+DEFINE_FIELD(slave_delivered, TimestampedFixedValue, ObisId(0, SLAVE_MBUS_ID, 24, 2, 1), TimestampedFixedField, m3, dm3);
 
 } // namespace fields
 
