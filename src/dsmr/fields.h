@@ -101,6 +101,27 @@ struct FixedField : ParsedField<T> {
   static const char *int_unit() { return _int_unit; }
 };
 
+struct TimestampedFixedValue : public FixedValue {
+  String timestamp;
+};
+
+// Some numerical values are prefixed with a timestamp. This is simply
+// both of them concatenated, e.g. 0-1:24.2.1(150117180000W)(00473.789*m3)
+template <typename T, const char *_unit, const char *_int_unit>
+struct TimestampedFixedField : public FixedField<T, _unit, _int_unit> {
+  ParseResult<void> parse(const char *str, const char *end) {
+    // First, parse timestamp
+    ParseResult<String> res = StringParser::parse_string(13, 13, str, end);
+    if (res.err)
+      return res;
+
+    static_cast<T*>(this)->val().timestamp = res.result;
+
+    // Which is immediately followed by the numerical value
+    return FixedField<T, _unit, _int_unit>::parse(res.next, end);
+  }
+};
+
 // A integer number is just represented as an integer.
 template <typename T, const char *_unit>
 struct IntField : ParsedField<T> {
