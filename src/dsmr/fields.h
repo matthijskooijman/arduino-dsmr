@@ -152,9 +152,11 @@ const uint8_t SLAVE_MBUS_ID = 4;
 #define DEFINE_FIELD(fieldname, value_t, obis, field_t, field_args...) \
   struct fieldname : field_t<fieldname, ##field_args> { \
     value_t fieldname; \
+    bool fieldname ## _present = false; \
     static constexpr ObisId id = obis; \
     static constexpr char name[] = #fieldname; \
     value_t& val() { return fieldname; } \
+    bool& present() { return fieldname ## _present; } \
   }
 
 /* Meter identification. This is not a normal field, but a

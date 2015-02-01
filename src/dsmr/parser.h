@@ -92,8 +92,10 @@ struct ParsedData<T, Ts...> : public T, ParsedData<Ts...> {
    * parses the value and stores it in the field.
    */
   ParseResult<void> parse_line(const ObisId& id, const char *str, const char *end) {
-    if (id == T::id)
+    if (id == T::id) {
+      T::present() = true;
       return T::parse(str, end);
+    }
     return ParsedData<Ts...>::parse_line(id, str, end);
   }
 
