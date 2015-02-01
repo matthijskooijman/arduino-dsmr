@@ -265,7 +265,7 @@ struct P1Parser {
     * pointer in the result will indicate the next unprocessed byte.
     */
   template <typename... Ts>
-  static ParseResult<void> parse(ParsedData<Ts...> *data, const char *str, size_t n) {
+  static ParseResult<void> parse(ParsedData<Ts...> *data, const char *str, size_t n, bool unknown_error = false) {
     ParseResult<void> res;
     if (!n || str[0] != '/')
       return res.fail(F("Data should start with /"), str);
@@ -294,7 +294,7 @@ struct P1Parser {
     if (check_res.result != crc)
       return res.fail(F("Checksum mismatch"), data_end + 1);
 
-    res = parse_data(data, data_start, data_end);
+    res = parse_data(data, data_start, data_end, unknown_error);
     res.next = check_res.next;
     return res;
   }
@@ -305,7 +305,7 @@ struct P1Parser {
    * checksum. Does not verify the checksum.
    */
   template <typename... Ts>
-  static ParseResult<void> parse_data(ParsedData<Ts...> *data, const char *str, const char *end) {
+  static ParseResult<void> parse_data(ParsedData<Ts...> *data, const char *str, const char *end, bool unknown_error = false) {
     ParseResult<void> res;
     // Split into lines and parse those
     const char *line_end = str, *line_start = str;
@@ -339,7 +339,7 @@ struct P1Parser {
     // Parse data lines
     while (line_end < end) {
       if (*line_end == '\r' || *line_end == '\n') {
-        ParseResult<void> tmp = parse_line(data, line_start, line_end);
+        ParseResult<void> tmp = parse_line(data, line_start, line_end, unknown_error);
         if (tmp.err)
           return tmp;
         line_start = line_end + 1;
@@ -354,7 +354,7 @@ struct P1Parser {
   }
 
   template <typename Data>
-  static ParseResult<void> parse_line(Data *data, const char *line, const char *end) {
+  static ParseResult<void> parse_line(Data *data, const char *line, const char *end, bool unknown_error) {
     ParseResult<void> res;
     if (line == end)
       return res;
@@ -372,6 +372,8 @@ struct P1Parser {
     // to the end, that's an error.
     if (datares.next != idres.next && datares.next != end)
       return res.fail(F("Trailing characters on data line"), datares.next);
+    else if (datares.next == idres.next && unknown_error)
+      return res.fail(F("Unknown field"), line);
 
     return res.until(end);
   }
