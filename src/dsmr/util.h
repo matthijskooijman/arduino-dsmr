@@ -46,12 +46,11 @@ inline unsigned int lengthof(const T (&)[sz]) { return sz; }
 // given Arduino string, without requiring a trailing NUL.
 // Requires that there _is_ room for nul-termination
 static void concat_hack(String& s, const char *append, size_t n) {
-  // Add null termination. Ugly, but it's faster than copying
-  // everything..
-  char tmp = append[n];
-  *((char *)append + n) = '\0';
-  s.concat(append);
-  *((char *)append + n) = tmp;
+  // Add null termination. Inefficient, but it works...
+  char buf[n + 1];
+  memcpy(buf, append, n);
+  buf[n] = 0;
+  s.concat(buf);
 }
 
 /**
