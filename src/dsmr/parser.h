@@ -117,11 +117,11 @@ struct StringParser {
       ++str_end;
 
     if (str_end == end)
-      return res.fail(F("Missing )"), str);
+      return res.fail(F("Missing )"), str_end);
 
     size_t len = str_end - str_start;
     if (len < min || len > max)
-      return res.fail(F("Invalid string length"), str);
+      return res.fail(F("Invalid string length"), str_start);
 
     concat_hack(res.result, str_start, len);
 
@@ -144,7 +144,7 @@ struct ObisIdParser {
       if (c >= '0' && c <= '9') {
         uint8_t digit = c - '0';
         if (id.v[part] > 25 || (id.v[part] == 25 && digit > 5))
-          return res.fail(F("Obis ID has number over 255"), str);
+          return res.fail(F("Obis ID has number over 255"), res.next);
         id.v[part] = id.v[part] * 10 + digit;
       } else if (part == 0 && c == '-') {
         part++;
@@ -222,7 +222,7 @@ struct P1Parser {
     }
 
     if (data_end >= str + n)
-      return res.fail(F("No checksum found"));
+      return res.fail(F("No checksum found"), data_end);
 
     crc = _crc16_update(crc, *data_end); // Include the ! in CRC
 
@@ -232,7 +232,7 @@ struct P1Parser {
 
     // Check CRC
     if (check_res.result != crc)
-      return res.fail(F("Checksum mismatch"), data_end);
+      return res.fail(F("Checksum mismatch"), data_end + 1);
 
     res = parse_data(data, data_start, data_end);
     res.next = check_res.next;
@@ -288,7 +288,7 @@ struct P1Parser {
     }
 
     if (line_end != line_start)
-      return res.fail(F("Last dataline not CRLF terminated"), line_start);
+      return res.fail(F("Last dataline not CRLF terminated"), line_end);
 
     return res;
   }

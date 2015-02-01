@@ -12,7 +12,7 @@
 #include "dsmr.h"
 
 // Data to parse
-String raw =
+const char raw[] =
   "/KFM5KAIFA-METER\r\n"
   "\r\n"
   "1-3:0.2.8(40)\r\n"
@@ -87,21 +87,10 @@ void setup() {
   Serial.begin(115200);
 
   MyData data;
-  ParseResult<void> res = P1Parser::parse(&data, raw.c_str(), raw.length());
+  ParseResult<void> res = P1Parser::parse(&data, raw, lengthof(raw));
   if (res.err) {
     // Parsing error, show it
-    Serial.print("Error: ");
-    Serial.println(res.err);
-    if (res.ctx) {
-      Serial.print("Near: ");
-      // Show up the first newline
-      const char *end = strchr(res.ctx, '\r');
-      if (end)
-        Serial.write((const uint8_t*)res.ctx, end - res.ctx);
-      else
-        Serial.write(res.ctx);
-      Serial.println();
-    }
+    Serial.println(res.fullError(raw, raw + lengthof(raw)));
   } else {
     // Parsed succesfully, print all values
     data.applyEach(Printer());

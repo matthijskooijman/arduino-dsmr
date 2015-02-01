@@ -124,6 +124,39 @@ struct ParseResult : public _ParseResult<ParseResult<T>, T> {
 
   template <typename T2>
   ParseResult(const ParseResult<T2> other): next(other.next), err(other.err), ctx(other.ctx) { }
+
+  /**
+   * Returns the error, including context in a fancy multi-line format.
+   * The start and end passed are the first and one-past-the-end
+   * characters in the total parsed string. These are needed to properly
+   * limit the context output.
+   */
+  String fullError(const char* start, const char* end) const {
+    String res;
+    if (this->ctx && start && end) {
+      // Find the entire line surrounding the context
+      const char *line_end = this->ctx;
+      while(line_end < end && line_end[0] != '\r' && line_end[0] != '\n') ++line_end;
+      const char *line_start = this->ctx;
+      while(line_start > start && line_start[-1] != '\r' && line_start[-1] != '\n') --line_start;
+
+      // We can now predict the context string length, so let String allocate
+      // memory in advance
+      res.reserve((line_end - line_start) + 2 + (this->ctx - line_start) + 1 + 2);
+
+      // Write the line
+      concat_hack(res, line_start, line_end - line_start);
+      res += "\r\n";
+
+      // Write a marker to point out ctx
+      while (line_start++ < this->ctx)
+        res += ' ';
+      res += '^';
+      res += "\r\n";
+    }
+    res += this->err;
+    return res;
+  }
 };
 
 /**

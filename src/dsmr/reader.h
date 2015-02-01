@@ -192,18 +192,11 @@ class P1Reader {
      */
     template<typename... Ts>
     bool parse(ParsedData<Ts...> *data, String *err) {
-      ParseResult<void> res = P1Parser::parse_data(data, buffer.c_str(), buffer.c_str() + buffer.length());
+      const char *str = buffer.c_str(), *end = buffer.c_str() + buffer.length();
+      ParseResult<void> res = P1Parser::parse_data(data, str, end);
 
-      if (res.err && err) {
-        err->concat("Failed to parse: ");
-        err->concat(res.err);
-        err->concat(" near: ");
-        // Show up the first newline
-        char *end = strchr(res.ctx, '\r');
-        if (end)
-          *end = 0;
-        err->concat(res.ctx);
-      }
+      if (res.err && err)
+        *err = res.fullError(str, end);
 
       // Clear the message
       this->clear();
