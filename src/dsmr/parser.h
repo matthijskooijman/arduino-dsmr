@@ -93,6 +93,8 @@ struct ParsedData<T, Ts...> : public T, ParsedData<Ts...> {
    */
   ParseResult<void> parse_line(const ObisId& id, const char *str, const char *end) {
     if (id == T::id) {
+      if (T::present())
+        return ParseResult<void>().fail(F("Duplicate field"), str);
       T::present() = true;
       return T::parse(str, end);
     }
