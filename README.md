@@ -8,6 +8,16 @@ This code was written for Arduino, but most of the parsing code it is pretty
 generic C++ (except for the Arduino- and AVR-based string handling), so it
 should be possible to adapt for use outside of the  Arduino environment.
 
+**Important: This library makes heavy use of C++11 features, which are
+not enabled in the Arduino IDE as of 1.6.0. Using this library requires
+manually merging [this pullrequest][PR], or manually modifiying your
+platform.txt file [according to this diff file][diff]. Hopefully Arduino
+will merge that pullrequest so this will work automatically in future
+versions.**
+
+[PR]: https://github.com/arduino/Arduino/pull/2175
+[diff]: https://github.com/arduino/Arduino/pull/2175/files#diff-0d45b5349ab1c852b7cad3e6b173e880
+
 Protocol
 --------
 Every smart meter in the Netherlands has to comply with the Dutch Smart
