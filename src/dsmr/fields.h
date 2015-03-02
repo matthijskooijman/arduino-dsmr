@@ -175,7 +175,8 @@ const uint8_t SLAVE_MBUS_ID = 4;
     value_t fieldname; \
     bool fieldname ## _present = false; \
     static constexpr ObisId id = obis; \
-    static constexpr char name[] = #fieldname; \
+    static constexpr char name_progmem[] PROGMEM = #fieldname; \
+    static constexpr const __FlashStringHelper *name = reinterpret_cast<const __FlashStringHelper*>(&name_progmem); \
     value_t& val() { return fieldname; } \
     bool& present() { return fieldname ## _present; } \
   }
