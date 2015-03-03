@@ -146,9 +146,6 @@ struct RawField : ParsedField<T> {
   }
 };
 
-// TODO: Put the name fields in PROGMEM. Simply using F() isn't allowed
-// outside functions, so this is a bit tricky to get right.
-
 namespace fields {
 
 constexpr char none[] = "";
