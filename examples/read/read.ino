@@ -113,8 +113,11 @@ unsigned long last;
 void setup() {
   Serial.begin(115200);
   Serial1.begin(115200);
+  #ifdef VCC_ENABLE
+  // This is needed on Pinoccio Scout boards to enable the 3V3 pin.
   pinMode(VCC_ENABLE, OUTPUT);
   digitalWrite(VCC_ENABLE, HIGH);
+  #endif
 
   // start a read right away
   reader.enable(true);
