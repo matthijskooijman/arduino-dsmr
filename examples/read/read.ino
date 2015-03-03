@@ -106,7 +106,7 @@ struct Printer {
 // Set up to read from the second serial port, and use D2 as the request
 // pin. On boards with only one (USB) serial port, you can also use
 // SoftwareSerial.
-P1Reader reader(&Serial1, D2);
+P1Reader reader(&Serial1, 2);
 
 unsigned long last;
 
