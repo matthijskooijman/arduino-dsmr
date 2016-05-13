@@ -136,6 +136,12 @@ fields in a generic way, for example to print the parse results with
 just a few lines of code. See the parse and read examples for how this
 works.
 
+Note that these examples contain the full list of supported fields,
+which causes parsing and printing code to be generated for all those
+fields, even if they are not present in the output you want to parse. It
+is recommended to limit the list of fields to just the ones that you
+need, to make the parsing and printing code smaller and faster.
+
 Parsed value types
 ------------------
 Some values are parsed to an Arduino `String` value or C++ integer type,
