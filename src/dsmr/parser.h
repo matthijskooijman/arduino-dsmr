@@ -68,14 +68,14 @@ struct ParsedData;
  */
 template<>
 struct ParsedData<> {
-  ParseResult<void> parse_line(const ObisId& id, const char *str, const char *end) {
+  ParseResult<void> __attribute__((__always_inline__)) parse_line_inlined(const ObisId& id, const char *str, const char *end) {
     // Parsing succeeded, but found no matching handler (so return
     // set the next pointer to show nothing was parsed).
     return ParseResult<void>().until(str);
   }
 
   template<typename F>
-  void applyEach(F&& f) {
+  void __attribute__((__always_inline__)) applyEach_inlined(F&& f) {
     // Nothing to do
   }
 };
@@ -97,21 +97,36 @@ struct ParsedData<T, Ts...> : public T, ParsedData<Ts...> {
    * parses the value and stores it in the field.
    */
   ParseResult<void> parse_line(const ObisId& id, const char *str, const char *end) {
+    return parse_line_inlined(id, str, end);
+  }
+
+  /**
+   * always_inline version of parse_line. This is a separate method, to
+   * allow recursively inlining all calls, but still have a non-inlined
+   * top-level parse_line method.
+   */
+  ParseResult<void> __attribute__((__always_inline__)) parse_line_inlined(const ObisId& id, const char *str, const char *end) {
     if (id == T::id) {
       if (T::present())
         return ParseResult<void>().fail((const __FlashStringHelper*)DUPLICATE_FIELD, str);
       T::present() = true;
       return T::parse(str, end);
     }
-    return ParsedData<Ts...>::parse_line(id, str, end);
+    return ParsedData<Ts...>::parse_line_inlined(id, str, end);
   }
 
   template<typename F>
   void applyEach(F&& f) {
+    applyEach_inlined(f);
+  }
+
+  template<typename F>
+  void  __attribute__((__always_inline__)) applyEach_inlined(F&& f) {
     T::apply(f);
-    return ParsedData<Ts...>::applyEach(f);
+    return ParsedData<Ts...>::applyEach_inlined(f);
   }
 };
+
 
 struct StringParser {
   static ParseResult<String> parse_string(size_t min, size_t max, const char *str, const char *end) {
