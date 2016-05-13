@@ -75,7 +75,7 @@ struct ParsedData<> {
   }
 
   template<typename F>
-  void applyEach(F f) {
+  void applyEach(F&& f) {
     // Nothing to do
   }
 };
@@ -107,7 +107,7 @@ struct ParsedData<T, Ts...> : public T, ParsedData<Ts...> {
   }
 
   template<typename F>
-  void applyEach(F f) {
+  void applyEach(F&& f) {
     T::apply(f);
     return ParsedData<Ts...>::applyEach(f);
   }
