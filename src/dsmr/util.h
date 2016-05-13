@@ -123,7 +123,7 @@ struct ParseResult : public _ParseResult<ParseResult<T>, T> {
   ParseResult(const ParseResult& other) = default;
 
   template <typename T2>
-  ParseResult(const ParseResult<T2> other): next(other.next), err(other.err), ctx(other.ctx) { }
+  ParseResult(const ParseResult<T2>& other): next(other.next), err(other.err), ctx(other.ctx) { }
 
   /**
    * Returns the error, including context in a fancy multi-line format.
