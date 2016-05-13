@@ -80,6 +80,11 @@ struct ParsedData<> {
   }
 };
 
+// Do not use F() for multiply-used strings (including strings used from
+// multiple template instantiations), that would result in multiple
+// instances of the string in the binary
+static constexpr char DUPLICATE_FIELD[] PROGMEM = "Duplicate field";
+
 /**
  * General case: At least one typename is passed.
  */
@@ -94,7 +99,7 @@ struct ParsedData<T, Ts...> : public T, ParsedData<Ts...> {
   ParseResult<void> parse_line(const ObisId& id, const char *str, const char *end) {
     if (id == T::id) {
       if (T::present())
-        return ParseResult<void>().fail(F("Duplicate field"), str);
+        return ParseResult<void>().fail((const __FlashStringHelper*)DUPLICATE_FIELD, str);
       T::present() = true;
       return T::parse(str, end);
     }
@@ -133,6 +138,12 @@ struct StringParser {
   }
 };
 
+// Do not use F() for multiply-used strings (including strings used from
+// multiple template instantiations), that would result in multiple
+// instances of the string in the binary
+static constexpr char INVALID_NUMBER[] PROGMEM = "Invalid number";
+static constexpr char INVALID_UNIT[] PROGMEM = "Invalid unit";
+
 struct NumParser {
   static ParseResult<uint32_t> parse(size_t max_decimals, const char* unit, const char *str, const char *end) {
     ParseResult<uint32_t> res;
@@ -149,7 +160,7 @@ struct NumParser {
     // Parse integer part
     while(num_end < end && !strchr("*.)", *num_end)) {
       if (*num_end < '0' || *num_end > '9')
-        return res.fail(F("Invalid number"), num_end);
+        return res.fail((const __FlashStringHelper*)INVALID_NUMBER, num_end);
       value *= 10;
       value += *num_end - '0';
       ++num_end;
@@ -161,7 +172,7 @@ struct NumParser {
 
       while(num_end < end && !strchr("*)", *num_end) && max_decimals--) {
         if (*num_end < '0' || *num_end > '9')
-          return res.fail(F("Invalid number"), num_end);
+          return res.fail((const __FlashStringHelper*)INVALID_NUMBER, num_end);
         value *= 10;
         value += *num_end - '0';
         ++num_end;
@@ -178,10 +189,10 @@ struct NumParser {
       const char *unit_start = ++num_end; // skip *
       while(num_end < end && *num_end != ')' && *unit) {
         if (*num_end++ != *unit++)
-          return res.fail(F("Invalid unit"), unit_start);
+          return res.fail((const __FlashStringHelper*)INVALID_UNIT, unit_start);
       }
       if (*unit)
-        return res.fail(F("Invalid unit"), unit_start);
+        return res.fail((const __FlashStringHelper*)INVALID_UNIT, unit_start);
     }
 
     if (num_end >= end || *num_end != ')')
