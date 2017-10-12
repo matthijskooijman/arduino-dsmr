@@ -31,7 +31,7 @@
 #ifndef DSMR_INCLUDE_PARSER_H
 #define DSMR_INCLUDE_PARSER_H
 
-#include <util/crc16.h>
+#include "crc16.h"
 #include "util.h"
 
 namespace dsmr {
