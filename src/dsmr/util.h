@@ -31,6 +31,12 @@
 #ifndef DSMR_INCLUDE_UTIL_H
 #define DSMR_INCLUDE_UTIL_H
 
+#ifdef ARDUINO_ARCH_ESP8266
+#define DSMR_PROGMEM
+#else
+#define DSMR_PROGMEM PROGMEM
+#endif
+
 #include <Arduino.h>
 
 namespace dsmr {
