@@ -33,7 +33,7 @@
 #define DSMR_INCLUDE_READER_H
 
 #include <Arduino.h>
-#include <util/crc16.h>
+#include "crc16.h"
 
 #include "parser.h"
 
@@ -70,7 +70,7 @@ class P1Reader {
      * rate configured).
      */
     P1Reader(Stream *stream, uint8_t req_pin)
-      : stream(stream), req_pin(req_pin), once(false), state(State::DISABLED) {
+      : stream(stream), req_pin(req_pin), once(false), state(State::DISABLED_STATE) {
       pinMode(req_pin, OUTPUT);
       digitalWrite(req_pin, LOW);
     }
@@ -85,7 +85,7 @@ class P1Reader {
      */
     void enable(bool once) {
       digitalWrite(this->req_pin, HIGH);
-      this->state = State::WAITING;
+      this->state = State::WAITING_STATE;
       this->once = once;
     }
 
@@ -96,7 +96,7 @@ class P1Reader {
      */
     void disable() {
       digitalWrite(this->req_pin, LOW);
-      this->state = State::DISABLED;
+      this->state = State::DISABLED_STATE;
       if (!this->_available)
         this->buffer = "";
       // Clear any pending bytes
@@ -118,7 +118,7 @@ class P1Reader {
      */
     bool loop() {
       while(true) {
-        if (state == State::CHECKSUM) {
+        if (state == State::CHECKSUM_STATE) {
           // Let the Stream buffer the CRC bytes
           if (this->stream->available() < CrcParser::CRC_LEN)
             return false;
@@ -130,7 +130,7 @@ class P1Reader {
           ParseResult<uint16_t> crc = CrcParser::parse(buf, buf + lengthof(buf));
 
           // Prepare for next message
-          state = State::WAITING;
+          state = State::WAITING_STATE;
 
           if (!crc.err && crc.result == this->crc) {
             // Message complete, checksum correct
@@ -148,22 +148,22 @@ class P1Reader {
             return false;
 
           switch (this->state) {
-            case State::DISABLED:
+            case State::DISABLED_STATE:
               // Where did this byte come from? Just toss it
               break;
-            case State::WAITING:
+            case State::WAITING_STATE:
               if (c == '/') {
-                this->state = State::READING;
+                this->state = State::READING_STATE;
                 // Include the / in the CRC
                 this->crc = _crc16_update(0, c);
                 this->clear();
               }
               break;
-            case State::READING:
+            case State::READING_STATE:
               // Include the ! in the CRC
               this->crc = _crc16_update(this->crc, c);
               if (c == '!')
-                this->state = State::CHECKSUM;
+                this->state = State::CHECKSUM_STATE;
               else
                 buffer.concat((char)c);
 
@@ -218,10 +218,10 @@ class P1Reader {
     Stream *stream;
     uint8_t req_pin;
     enum class State : uint8_t {
-      DISABLED,
-      WAITING,
-      READING,
-      CHECKSUM,
+      DISABLED_STATE,
+      WAITING_STATE,
+      READING_STATE,
+      CHECKSUM_STATE,
     };
     bool _available;
     bool once;

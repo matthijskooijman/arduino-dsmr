@@ -31,7 +31,7 @@
 #ifndef DSMR_INCLUDE_PARSER_H
 #define DSMR_INCLUDE_PARSER_H
 
-#include <util/crc16.h>
+#include "crc16.h"
 #include "util.h"
 
 namespace dsmr {
@@ -83,7 +83,7 @@ struct ParsedData<> {
 // Do not use F() for multiply-used strings (including strings used from
 // multiple template instantiations), that would result in multiple
 // instances of the string in the binary
-static constexpr char DUPLICATE_FIELD[] PROGMEM = "Duplicate field";
+static constexpr char DUPLICATE_FIELD[] DSMR_PROGMEM = "Duplicate field";
 
 /**
  * General case: At least one typename is passed.
@@ -156,8 +156,8 @@ struct StringParser {
 // Do not use F() for multiply-used strings (including strings used from
 // multiple template instantiations), that would result in multiple
 // instances of the string in the binary
-static constexpr char INVALID_NUMBER[] PROGMEM = "Invalid number";
-static constexpr char INVALID_UNIT[] PROGMEM = "Invalid unit";
+static constexpr char INVALID_NUMBER[] DSMR_PROGMEM = "Invalid number";
+static constexpr char INVALID_UNIT[] DSMR_PROGMEM = "Invalid unit";
 
 struct NumParser {
   static ParseResult<uint32_t> parse(size_t max_decimals, const char* unit, const char *str, const char *end) {
