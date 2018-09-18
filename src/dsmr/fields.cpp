@@ -38,6 +38,20 @@ using namespace dsmr::fields;
 // const members in the class declaration, but if their address is
 // taken, they still need a normal definition somewhere (to allocate
 // storage).
+constexpr char units::none[];
+constexpr char units::kWh[];
+constexpr char units::Wh[];
+constexpr char units::kW[];
+constexpr char units::W[];
+constexpr char units::V[];
+constexpr char units::mV[];
+constexpr char units::A[];
+constexpr char units::mA[];
+constexpr char units::m3[];
+constexpr char units::dm3[];
+constexpr char units::GJ[];
+constexpr char units::MJ[];
+
 constexpr ObisId identification::id;
 constexpr char identification::name_progmem[];
 constexpr const __FlashStringHelper *identification::name;
