@@ -74,9 +74,9 @@ field, which defines the meaning and format of the rest of the line.
 Parsing a message
 -----------------
 Unlike other solutions floating around (which typically do some pattern
-matching to extra the data they need), this code properly parses
-messages, verifying the checksum and really parsing each line according
-to the spcecifications. This should make for more reliable parsing, and
+matching to extract the data they need), this code properly parses
+messages, verifying the checksum and really parses each line according
+to the specifications. This should make for more reliable parsing, and
 allows for useful parser error messages:
 
 	1-0:1.8.1(000671.578*XWh)
