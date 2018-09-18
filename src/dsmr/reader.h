@@ -119,8 +119,9 @@ class P1Reader {
     bool loop() {
       while(true) {
         if (state == State::CHECKSUM_STATE) {
-          // Let the Stream buffer the CRC bytes
-          if (this->stream->available() < CrcParser::CRC_LEN)
+          // Let the Stream buffer the CRC bytes. Convert to size_t to
+          // prevent unsigned vs signed comparison
+          if ((size_t)this->stream->available() < CrcParser::CRC_LEN)
             return false;
 
           char buf[CrcParser::CRC_LEN];
