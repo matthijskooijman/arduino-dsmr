@@ -169,6 +169,12 @@ class P1Reader {
                 buffer.concat((char)c);
 
               break;
+            case State::CHECKSUM_STATE:
+              // This cannot happen (given the surrounding if), but the
+              // compiler is not smart enough to see this, so list this
+              // case to prevent a warning.
+              abort();
+              break;
           }
         }
       }
