@@ -78,6 +78,10 @@ struct ParsedData<> {
   void __attribute__((__always_inline__)) applyEach_inlined(F&& f) {
     // Nothing to do
   }
+
+  bool all_present_inlined() {
+    return true;
+  }
 };
 
 // Do not use F() for multiply-used strings (including strings used from
@@ -124,6 +128,17 @@ struct ParsedData<T, Ts...> : public T, ParsedData<Ts...> {
   void  __attribute__((__always_inline__)) applyEach_inlined(F&& f) {
     T::apply(f);
     return ParsedData<Ts...>::applyEach_inlined(f);
+  }
+
+  /**
+   * Returns true when all defined fields are present.
+   */
+  bool all_present() {
+    return all_present_inlined();
+  }
+
+  bool all_present_inlined() {
+    return T::present() && ParsedData<Ts...>::all_present_inlined();
   }
 };
 
