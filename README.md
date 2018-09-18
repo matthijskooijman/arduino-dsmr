@@ -218,11 +218,8 @@ resistors.
 
 It's also possible to do all of the serial reception, including the
 inverting, in software using Arduino's SoftwareSerial library. However,
-at the time of writing SoftwareSerial isn't working properly at 115200
-and needs [this patch series][ssfix] applied to work. Even then, it
-seems there are still occasional reception errors.
-
-[ssfix]: "https://github.com/arduino/Arduino/pull/2032
+it seems there are still occasional reception errors when using
+SoftwareSerial.
 
 Slave meters
 ------------
