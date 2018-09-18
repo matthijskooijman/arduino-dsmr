@@ -53,7 +53,7 @@ though it's not entirely clear how all of these fit together. However,
 the DSMR spec has a complete, though sometimes confusing list of fields
 used.
 
-[iec62056-21]: http://klara.student.utwente.nl/~stephan/iec62056-21%7Bed1.0%7Den_.pdf
+[iec62056-21]: https://www.ungelesen.net/protagWork/media/downloads/solar-steuerung/iec62056-21%7Bed1.0%7Den_.pdf
 [objlists]: http://www.dlms.com/documentation/listofstandardobiscodesandmaintenanceproces/index.html
 
 A typical P1 message looks something like this:
