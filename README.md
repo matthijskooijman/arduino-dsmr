@@ -23,7 +23,8 @@ not been verified or tested (feedback welcome).
 The DSMR specifications can be found on [the site of Netbeheer
 Nederland][netbeheer]. Of particualr interest is the "P1 companion
 standard" that specifies the P1 port (here's some useful
-versions: [4.0.7](http://www.netbeheernederland.nl/publicaties/publicatie/?documentregistrationid=797212682),
+versions: [3.0](http://www.netbeheernederland.nl/publicaties/publicatie/?documentregistrationid=1747168),
+[4.0.7](http://www.netbeheernederland.nl/publicaties/publicatie/?documentregistrationid=797212682),
 [4.2.2](http://www.netbeheernederland.nl/publicaties/publicatie/?documentregistrationid=797212672),
 [5.0](http://www.netbeheernederland.nl/publicaties/publicatie/?documentregistrationid=272367618)).
 
