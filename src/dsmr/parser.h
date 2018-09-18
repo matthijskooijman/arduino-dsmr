@@ -68,7 +68,7 @@ struct ParsedData;
  */
 template<>
 struct ParsedData<> {
-  ParseResult<void> __attribute__((__always_inline__)) parse_line_inlined(const ObisId& id, const char *str, const char *end) {
+  ParseResult<void> __attribute__((__always_inline__)) parse_line_inlined(const ObisId& /* id */, const char *str, const char * /* end */) {
     // Parsing succeeded, but found no matching handler (so return
     // set the next pointer to show nothing was parsed).
     return ParseResult<void>().until(str);
