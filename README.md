@@ -107,12 +107,18 @@ power fields in the example message above. We define a datatype:
 	>;
 
 The syntax is a bit weird because of the template magic used, but the
-above essentially defines a struct with two members. There is some extra
-stuff in the background, but the `MyData` can be used just like the
-below struct. It also takes up the same amount of space.
+above essentially defines a struct with members for each field to be
+parsed. For each field, there is also an associated `xxx_present`
+member, which can be used to check whether the field was present in the
+parsed data (if it is false, the associated field contains uninitialized
+data).  There is some extra stuff in the background, but the `MyData`
+can be used just like the below struct. It also takes up the same amount
+of space.
 
 	struct MyData {
+		bool identification_present;
 		String identification;
+		bool power_delivered_present;
 		FixedValue power_delivered;
 	};
 
@@ -125,12 +131,18 @@ above, the parser knows what fields to look for.
 Finally, we can check if the parsing was succesful and access the parsed
 values as members of `data`:
 
-	  if (!res.err) {
+	  if (!res.err && res.all_present()) {
 	    // Succesfully parsed, print results:
 	    Serial.println(data.identification);
 	    Serial.print(data.power_delivered.int_val());
 	    Serial.println("W");
 	  }
+
+In this case, we check whether parsing was successful, but also check
+that all defined fields were present in the parsed message (using the
+`all_present()` method), to prevent printing undefined values. If you
+want to support optional fields, you can use the `xxx_present` members
+for each field individually instead.
 
 Additionally, this template approach allows looping over all available
 fields in a generic way, for example to print the parse results with
