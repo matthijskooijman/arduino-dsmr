@@ -168,8 +168,6 @@ struct NumParser {
     const char *num_start = str + 1; // Skip (
     const char *num_end = num_start;
 
-    const char sep = unit ? '*' : ')';
-    bool saw_dot  = false;
     uint32_t value = 0;
 
     // Parse integer part
