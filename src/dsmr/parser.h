@@ -75,7 +75,7 @@ struct ParsedData<> {
   }
 
   template<typename F>
-  void __attribute__((__always_inline__)) applyEach_inlined(F&& f) {
+  void __attribute__((__always_inline__)) applyEach_inlined(F&& /* f */) {
     // Nothing to do
   }
 
