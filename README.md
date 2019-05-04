@@ -21,14 +21,15 @@ the 4.x and 5.0 specifications. 3.x meters might also work, but this has
 not been verified or tested (feedback welcome).
 
 The DSMR specifications can be found on [the site of Netbeheer
-Nederland][netbeheer]. Of particualr interest is the "P1 companion
-standard" that specifies the P1 port (here's some useful
-versions: [3.0](http://www.netbeheernederland.nl/publicaties/publicatie/?documentregistrationid=1747168),
-[4.0.7](http://www.netbeheernederland.nl/publicaties/publicatie/?documentregistrationid=797212682),
-[4.2.2](http://www.netbeheernederland.nl/publicaties/publicatie/?documentregistrationid=797212672),
-[5.0](http://www.netbeheernederland.nl/publicaties/publicatie/?documentregistrationid=272367618)).
+Nederland][netbeheer], in particular on [this
+page][dossier-slimme-meter]. Of particular interest is the "P1 companion
+standard" that specifies the P1 port and protocol (though not very
+clearly). Specifications can also be found in the `specs` subdirectory
+of this repository (including some older versions that are no longer
+online, which is why I started collecting them here).
 
 [netbeheer]: http://www.netbeheernederland.nl
+[dossier-slimme-meter]: https://www.netbeheernederland.nl/dossiers/slimme-meter-15/documenten
 
 According to DSMR, every smart electricity meter needs to have a P1
 port. This is a [6p6c socket][6p6c] (commonly, but incorrectly referred
