@@ -212,6 +212,10 @@ constexpr ObisId gas_delivered::id;
 constexpr char gas_delivered::name_progmem[];
 constexpr const __FlashStringHelper *gas_delivered::name;
 
+constexpr ObisId gas_delivered_non_temp_converted::id;
+constexpr char gas_delivered_non_temp_converted::name_progmem[];
+constexpr const __FlashStringHelper *gas_delivered_non_temp_converted::name;
+
 constexpr ObisId thermal_device_type::id;
 constexpr char thermal_device_type::name_progmem[];
 constexpr const __FlashStringHelper *thermal_device_type::name;
