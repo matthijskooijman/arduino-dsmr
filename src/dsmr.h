@@ -40,4 +40,7 @@
 using namespace dsmr;
 using namespace dsmr::fields;
 
+//In case of belgium then use next line for field definition
+//using namespace dsmr::fields_belgium;
+
 #endif // DSMR_INCLUDE_DSMR_H
