@@ -32,15 +32,22 @@
 #ifndef DSMR_INCLUDE_DSMR_H
 #define DSMR_INCLUDE_DSMR_H
 
+// If in belgium, make sure the next line is uncommented
+// #define DSRM_IN_BELGIUM
+
 #include "dsmr/parser.h"
 #include "dsmr/reader.h"
 #include "dsmr/fields.h"
 
 // Allow using everything without the namespace prefixes
 using namespace dsmr;
-using namespace dsmr::fields;
+#ifndef DSRM_IN_BELGIUM
+  using namespace dsmr::fields;
+#endif
 
 //In case of belgium then use next line for field definition
-//using namespace dsmr::fields_belgium;
+#ifdef DSRM_IN_BELGIUM
+    using namespace dsmr::fields_belgium;
+#endif
 
 #endif // DSMR_INCLUDE_DSMR_H
