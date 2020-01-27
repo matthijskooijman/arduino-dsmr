@@ -146,6 +146,9 @@ struct RawField : ParsedField<T> {
   }
 };
 
+
+#ifndef DSRM_IN_BELGIUM
+//Default is the Dutch DSMR specification
 namespace fields {  // Dutch DSMR specification 
 
 struct units {
@@ -347,7 +350,8 @@ DEFINE_FIELD(slave_delivered, TimestampedFixedValue, ObisId(0, SLAVE_MBUS_ID, 24
 
 } // namespace fields
 
-namespace fields_belgium {
+#else // Belgium definition starts here
+namespace fields {
   //This is the DSMR specification for the Belgium DSMR - specification 5.0.2 - with Belgium extentention
   //Link: Fluvius Specification document: https://www.fluvius.be/sites/fluvius/files/2019-07/1901-fluvius-technical-specification-user-ports-digital-meter.pdf
   //Link: Specification document Belgium https://onedrive.live.com/view.aspx?resid=EAEC8CA1B66CDF7B!245341&ithint=file%2Cdocx&authkey=!ABXM6pDlhjeOr7A
@@ -554,6 +558,8 @@ DEFINE_FIELD(slave_valve_position, uint8_t, ObisId(0, SLAVE_MBUS_ID, 24, 4, 0), 
 DEFINE_FIELD(slave_delivered, TimestampedFixedValue, ObisId(0, SLAVE_MBUS_ID, 24, 2, 1), TimestampedFixedField, units::m3, units::dm3);
 
 } // namespace fields_belgium
+
+#endif
 
 } // namespace dsmr
 

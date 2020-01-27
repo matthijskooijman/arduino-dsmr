@@ -41,13 +41,6 @@
 
 // Allow using everything without the namespace prefixes
 using namespace dsmr;
-#ifndef DSRM_IN_BELGIUM
-  using namespace dsmr::fields;
-#endif
-
-//In case of belgium then use next line for field definition
-#ifdef DSRM_IN_BELGIUM
-    using namespace dsmr::fields_belgium;
-#endif
+using namespace dsmr::fields;
 
 #endif // DSMR_INCLUDE_DSMR_H
