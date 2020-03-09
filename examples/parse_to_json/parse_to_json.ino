@@ -1,0 +1,348 @@
+/*
+ * Permission is hereby granted, free of charge, to anyone
+ * obtaining a copy of this document and accompanying files,
+ * to do whatever they want with them without any restriction,
+ * including, but not limited to, copying, modification and redistribution.
+ * NO WARRANTY OF ANY KIND IS PROVIDED.
+ *
+ * Example that shows how to parse a P1 message and automatically print
+ * the result.
+*/
+
+#include "dsmr.h"
+#include <ArduinoJson.h>
+
+//--- if you have a real Slimme Meter connected ---
+//--- activate the next two #defines --------------
+//#define READSLIMMEMETER
+//#define DTR_ENABLE 12   // GPIO-pin to use for DTR
+
+
+// Data to parse
+//---  LandisGyr E350  KMP5  DSMR50
+const char msg1[] =
+  "/XMX5LGBBLB2410065887\r\n"
+  "\r\n"   
+  "1-3:0.2.8(50)\r\n"                                   // p1_version
+  "0-0:1.0.0(200408063501S)\r\n"                        // timestamp
+  "0-0:96.1.1(4530303336303000000000000000000040)\r\n"  // equiptment_id
+  "1-0:1.8.1(000234.191*kWh)\r\n"                       // energy_delivered_tariff1
+  "1-0:1.8.2(000402.930*kWh)\r\n"                       // energy_delivered_tariff2
+  "1-0:2.8.1(000119.045*kWh)\r\n"                       // energy_returned_tariff1
+  "1-0:2.8.2(000079.460*kWh)\r\n"                       // energy_returned_tariff2
+  "0-0:96.14.0(0001)\r\n"                               // electricity_tariff
+  "1-0:1.7.0(001.22*kW)\r\n"                            // power_delivered
+  "1-0:2.7.0(001.11*kW)\r\n"                            // power_returned
+  "0-0:96.7.21(00010)\r\n"                              // electricity_failures
+  "0-0:96.7.9(00000)\r\n"                               // electricity_long_failures
+  "1-0:99.97.0(0)(0-0:96.7.19)\r\n"                     // electricity_failure_log
+  "1-0:32.32.0(00002)\r\n"                              // electricity_sags_l1
+  "1-0:52.32.0(00003)\r\n"                              // electricity_sags_l2
+  "1-0:72.32.0(00003)\r\n"                              // electricity_sags_l3
+  "1-0:32.36.0(00000)\r\n"                              // electricity_swells_l1
+  "1-0:52.36.0(00000)\r\n"                              // electricity_swells_l2
+  "1-0:72.36.0(00000)\r\n"                              // electricity_swells_l3
+  "0-0:96.13.0()\r\n"                                   // message_long
+  "1-0:32.7.0(241.0*V)\r\n"                             // voltage_l1
+  "1-0:52.7.0(237.0*V)\r\n"                             // voltage_l2
+  "1-0:72.7.0(235.0*V)\r\n"                             // voltage_l3
+  "1-0:31.7.0(000*A)\r\n"                               // current_l1
+  "1-0:51.7.0(000*A)\r\n"                               // current_l2
+  "1-0:71.7.0(000*A)\r\n"                               // current_l3
+  "1-0:21.7.0(00.536*kW)\r\n"                           // power_delivered_l1
+  "1-0:41.7.0(00.194*kW)\r\n"                           // power_delivered_l2
+  "1-0:61.7.0(00.487*kW)\r\n"                           // power_delivered_l3
+  "1-0:22.7.0(00.013*kW)\r\n"                           // power_returned_l1
+  "1-0:42.7.0(00.611*kW)\r\n"                           // power_returned_l2
+  "1-0:62.7.0(00.486*kW)\r\n"                           // power_returned_l3
+  "0-1:24.1.0(003)\r\n"                                 // gas_device_type
+  "0-1:96.1.0(4730303339303031363532303530323136)\r\n"  // gas_equipment_id
+  "0-1:24.2.1(200408063501S)(00169.156*m3)\r\n"         // gas_delivered
+  "!0876\r\n";
+
+//---  Sagemcom XS210 ESMR5 (1Fase)
+const char msg2[] =
+  "/Ene5\\XS210 ESMR 5.0\r\n"
+  "\r\n"
+  "1-3:0.2.8(50)\r\n"                                   // p1_version
+  "0-0:1.0.0(190508094821S)\r\n"                        // timestamp
+  "0-0:96.1.1(4530303437303030123456789134343137)\r\n"  // equiptment_id
+  "1-0:1.8.1(000769.736*kWh)\r\n"                       // energy_delivered_tariff1
+  "1-0:1.8.2(000664.646*kWh)\r\n"                       // energy_delivered_tariff2
+  "1-0:2.8.1(000000.016*kWh)\r\n"                       // energy_returned_tariff1
+  "1-0:2.8.2(000000.000*kWh)\r\n"                       // energy_returned_tariff2
+  "0-0:96.14.0(0002)\r\n"                               // electricity_tariff
+  "1-0:1.7.0(00.037*kW)\r\n"                            // power_delivered
+  "1-0:2.7.0(00.000*kW)\r\n"                            // power_returned
+  "0-0:96.7.21(00204)\r\n"                              // electricity_failures
+  "0-0:96.7.9(00147)\r\n"               // electricity_long_failures  // electricity_failure_log
+  "1-0:99.97.0(10)(0-0:96.7.19)(190508094303S)(0000055374*s)(190507165813S)(0000007"
+    "991*s)(190507141021S)(0000000274*s)(190507135954S)(0000000649*s)(190507134811S)("
+    "0000083213*s)(190506143928S)(0000090080*s)(190505123501S)(0000073433*s)(19050415"
+    "2603S)(0000003719*s)(190504120844S)(0000337236*s)(190430142638S)(0000165493*s)\r\n"
+  "1-0:32.32.0(00149)\r\n"                              // electricity_sags_l1
+  "1-0:32.36.0(00000)\r\n"                              // electricity_swells_l1
+  "0-0:96.13.0()\r\n"                                   // message_long
+  "1-0:32.7.0(231.0*V)\r\n"                             // voltage_l1
+  "1-0:31.7.0(000*A)\r\n"                               // current_l1
+  "1-0:21.7.0(00.037*kW)\r\n"                           // power_delivered_l1
+  "1-0:22.7.0(00.000*kW)\r\n"                           // power_returned_l1
+  "0-1:24.1.0(003)\r\n"                                 // gas_device_type
+  "0-1:96.1.0(4730303533303987654321373431393137)\r\n"  // gas_equipment_id
+  "0-1:24.2.1(632525252525S)(00000.000)\r\n"            // gas_delivered
+  "!DE4A\r\n";
+
+//--- Sagemcom Fluvius ? --(Belgie)
+const char msg3[] =
+  "/FLU5\\253769484_A\r\n"      
+  "\r\n"                   
+  "0-0:96.1.4(50213)\r\n"                               // p1_version (be)       *NOT PROCESSED*
+  "0-0:96.1.1(3153414123456789303638373236)\r\n"        // equiptment_id
+  "0-0:1.0.0(191204184601W)\r\n"                        // timestamp
+  "1-0:1.8.1(000050.069*kWh)\r\n"                       // energy_delivered_tariff1
+  "1-0:1.8.2(000055.085*kWh)\r\n"                       // energy_delivered_tariff2
+  "1-0:2.8.1(000019.870*kWh)\r\n"                       // energy_returned_tariff1
+  "1-0:2.8.2(000005.678*kWh)\r\n"                       // energy_returned_tariff2
+  "0-0:96.14.0(0001)\r\n"                               // electricity_tariff
+  "1-0:1.7.0(00.655*kW)\r\n"                            // power_delivered
+  "1-0:2.7.0(00.000*kW)\r\n"                            // power_returned
+  "1-0:32.7.0(225.1*V)\r\n"                             // voltage_l1
+  "1-0:52.7.0(000.0*V)\r\n"                             // voltage_l2
+  "1-0:72.7.0(225.7*V)\r\n"                             // voltage_l3
+  "1-0:31.7.0(001*A)\r\n"                               // current_l1
+  "1-0:51.7.0(002*A)\r\n"                               // current_l2
+  "1-0:71.7.0(001*A)\r\n"                               // current_l3
+  "0-0:96.3.10(1)\r\n"                                  // electricity_switch_position
+  "0-0:17.0.0(999.9*kW)\r\n"                            // electricity_threshold
+  "1-0:31.4.0(999*A)\r\n"                               // fuse_treshold_l1
+  "0-0:96.13.0()\r\n"                                   // message_long
+  "0-1:24.1.0(003)\r\n"                                 // gas_device_type
+  "0-1:96.1.1(37464C4F32319876543215373430)\r\n"        // gas_equipment_id (be) *NOT PROCESSED*
+  "0-1:24.4.0(1)\r\n"                                   // gas_valve_position
+  "0-1:24.2.3(191204184600W)(00070.043*m3)\r\n"         // gas_delivered (be)    *NOT PROCESSED*
+  "!7934\r\n";        
+
+/**
+ * Define the data we're interested in, as well as the datastructure to
+ * hold the parsed data.
+ * Each template argument below results in a field of the same name.
+ */
+using MyData = ParsedData<
+  /* String */         identification
+  /* String */        ,p1_version
+  /* String */        ,timestamp
+  /* String */        ,equipment_id
+  /* FixedValue */    ,energy_delivered_tariff1
+  /* FixedValue */    ,energy_delivered_tariff2
+  /* FixedValue */    ,energy_returned_tariff1
+  /* FixedValue */    ,energy_returned_tariff2
+  /* String */        ,electricity_tariff
+  /* FixedValue */    ,power_delivered
+  /* FixedValue */    ,power_returned
+  /* FixedValue */    ,electricity_threshold
+  /* uint8_t */       ,electricity_switch_position
+  /* uint32_t */      ,electricity_failures
+  /* uint32_t */      ,electricity_long_failures
+  /* String */        ,electricity_failure_log
+  /* uint32_t */      ,electricity_sags_l1
+  /* uint32_t */      ,electricity_sags_l2
+  /* uint32_t */      ,electricity_sags_l3
+  /* uint32_t */      ,electricity_swells_l1
+  /* uint32_t */      ,electricity_swells_l2
+  /* uint32_t */      ,electricity_swells_l3
+  /* String */        ,message_short
+  /* String */        ,message_long
+  /* FixedValue */    ,voltage_l1
+  /* FixedValue */    ,voltage_l2
+  /* FixedValue */    ,voltage_l3
+  /* FixedValue */    ,current_l1
+  /* FixedValue */    ,current_l2
+  /* FixedValue */    ,current_l3
+  /* FixedValue */    ,power_delivered_l1
+  /* FixedValue */    ,power_delivered_l2
+  /* FixedValue */    ,power_delivered_l3
+  /* FixedValue */    ,power_returned_l1
+  /* FixedValue */    ,power_returned_l2
+  /* FixedValue */    ,power_returned_l3
+  /* uint16_t */      ,gas_device_type
+  /* String */        ,gas_equipment_id
+  /* uint8_t */       ,gas_valve_position
+  /* TimestampedFixedValue */ ,gas_delivered
+  /* uint16_t */      ,thermal_device_type
+  /* String */        ,thermal_equipment_id
+  /* uint8_t */       ,thermal_valve_position
+  /* TimestampedFixedValue */ ,thermal_delivered
+  /* uint16_t */      ,water_device_type
+  /* String */        ,water_equipment_id
+  /* uint8_t */       ,water_valve_position
+  /* TimestampedFixedValue */ ,water_delivered
+  /* uint16_t */      ,slave_device_type
+  /* String */        ,slave_equipment_id
+  /* uint8_t */       ,slave_valve_position
+  /* TimestampedFixedValue */ ,slave_delivered
+>;
+
+#if defined(READSLIMMEMETER)
+  #ifdef DTR_ENABLE
+    P1Reader    slimmeMeter(&Serial, DTR_ENABLE);
+  #else
+    P1Reader    slimmeMeter(&Serial, 0);
+  #endif
+#endif
+
+//===========================GLOBAL VAR'S======================================
+  MyData      DSMRdata;
+  DynamicJsonDocument jsonDoc(4000);  // generic doc to return, clear() before use!
+  JsonObject  jsonObj;
+  uint32_t    readTimer;
+  char        jsonArrayName[20] = "";
+
+
+struct buildJson {
+
+    JsonArray root = jsonDoc.createNestedArray(jsonArrayName);
+    
+    template<typename Item>
+    void apply(Item &i) {
+      String Name = Item::name;
+
+      if (i.present()) 
+      {
+        JsonObject nested = root.createNestedObject();
+        nested["name"]  = Name;
+        String Unit = Item::unit();
+        nested["value"] = value_to_json(i.val());
+        
+        if (Unit.length() > 0)
+        {
+          nested["unit"]  = Unit;
+        }
+      }
+  }
+  
+  template<typename Item>
+  Item& value_to_json(Item& i) {
+    return i;
+  }
+
+  String value_to_json(TimestampedFixedValue i) {
+    return String(i);
+  }
+  
+  float value_to_json(FixedValue i) {
+    return i;
+  }
+
+}; // buildjson{} 
+
+
+//=======================================================================
+void makeJson() 
+{
+  String toReturn;
+
+  jsonDoc.clear();
+
+  strcpy(jsonArrayName, "fields");
+  DSMRdata.applyEach(buildJson());
+  Serial.println();
+
+  jsonObj = jsonDoc.as<JsonObject>();
+
+  //serializeJson(jsonObj, toReturn);         // for production
+  serializeJsonPretty(jsonObj, toReturn);     // for human readable testing
+  Serial.printf("JSON String is %d chars\r\n", toReturn.length());
+  Serial.println(toReturn);
+
+} // makeJson()
+
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("\n\nAnd now it begins ...\n");
+
+  Serial.println(ESP.getResetReason());
+  if (   ESP.getResetReason() == "Exception" 
+      || ESP.getResetReason() == "Software Watchdog"
+      || ESP.getResetReason() == "Soft WDT reset"
+      ) 
+  {
+    while (1) 
+    {
+      delay(500);
+      digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+    }
+  }
+
+
+#if defined(READSLIMMEMETER)
+  slimmeMeter.enable(true);
+#else
+  ParseResult<void> res;
+  //--- read first telegram ---
+  Serial.println("\r\n====================================================");
+  Serial.println("Start parsing telegram 1");
+  DSMRdata = {};
+  res = P1Parser::parse(&DSMRdata, msg1, lengthof(msg1));
+  if (res.err) {
+    // Parsing error, show it
+    Serial.println(res.fullError(msg1, msg1 + lengthof(msg1)));
+  } else if (!DSMRdata.all_present()) {
+    Serial.println("DSMR: Some fields are missing");
+  } 
+  // Succesfully parsed, make JSON:
+  makeJson();
+
+  //--- read second telegram ---
+  Serial.println("\r\n====================================================");
+  Serial.println("Start parsing telegram 2");
+  DSMRdata = {};
+  res = P1Parser::parse(&DSMRdata, msg2, lengthof(msg2));
+  if (res.err) {
+    // Parsing error, show it
+    Serial.println(res.fullError(msg2, msg2 + lengthof(msg2)));
+  } else if (!DSMRdata.all_present()) {
+    Serial.println("DSMR: Some fields are missing");
+  } 
+  // Succesfully parsed, make JSON:
+  makeJson();
+
+  //--- read third telegram ---
+  Serial.println("\r\n====================================================");
+  Serial.println("Start parsing telegram 3");
+  DSMRdata = {};
+  res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3));
+  if (res.err) {
+    // Parsing error, show it
+    Serial.println(res.fullError(msg3, msg3 + lengthof(msg3)));
+  } else if (!DSMRdata.all_present()) {
+    Serial.println("DSMR: Some fields are missing");
+  } 
+  // Succesfully parsed, make JSON:
+  makeJson();
+
+#endif
+
+} // setup()
+
+
+void loop () {
+#if defined(READSLIMMEMETER)
+  slimmeMeter.loop();
+  slimmeMeter.enable(true);
+  if (millis() - readTimer > 10000)
+  {
+    readTimer = millis();
+    if (slimmeMeter.available()) 
+    {
+      DSMRdata = {};
+      String DSMRerror;
+      
+      if (slimmeMeter.parse(&DSMRdata, &DSMRerror))   // Parse succesful, print result
+      {
+        buildJson();
+      }
+    }
+  }
+#endif
+} // loop()
