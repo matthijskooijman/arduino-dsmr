@@ -198,7 +198,8 @@ struct NumParser {
     if (max_decimals && num_end < end && *num_end == '.') {
       ++num_end;
 
-      while(num_end < end && !strchr("*)", *num_end) && max_decimals--) {
+      while(num_end < end && !strchr("*)", *num_end) && max_decimals) {
+        --max_decimals;
         if (*num_end < '0' || *num_end > '9')
           return res.fail((const __FlashStringHelper*)INVALID_NUMBER, num_end);
         value *= 10;
