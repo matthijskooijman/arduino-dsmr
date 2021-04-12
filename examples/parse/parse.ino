@@ -9,7 +9,7 @@
  * the result.
 */
 
-#include "dsmr.h"
+#include "dsmr2.h"
 
 // Data to parse
 const char raw[] =
@@ -53,6 +53,7 @@ const char raw[] =
 using MyData = ParsedData<
   /* String */ identification,
   /* String */ p1_version,
+  /* String */ p1_version_be,
   /* String */ timestamp,
   /* String */ equipment_id,
   /* FixedValue */ energy_delivered_tariff1,
@@ -87,22 +88,30 @@ using MyData = ParsedData<
   /* FixedValue */ power_returned_l1,
   /* FixedValue */ power_returned_l2,
   /* FixedValue */ power_returned_l3,
-  /* uint16_t */ gas_device_type,
-  /* String */ gas_equipment_id,
-  /* uint8_t */ gas_valve_position,
-  /* TimestampedFixedValue */ gas_delivered,
-  /* uint16_t */ thermal_device_type,
-  /* String */ thermal_equipment_id,
-  /* uint8_t */ thermal_valve_position,
-  /* TimestampedFixedValue */ thermal_delivered,
-  /* uint16_t */ water_device_type,
-  /* String */ water_equipment_id,
-  /* uint8_t */ water_valve_position,
-  /* TimestampedFixedValue */ water_delivered,
-  /* uint16_t */ slave_device_type,
-  /* String */ slave_equipment_id,
-  /* uint8_t */ slave_valve_position,
-  /* TimestampedFixedValue */ slave_delivered
+  /* uint16_t */ mbus1_device_type,
+  /* String */ mbus1_equipment_id_tc,
+  /* String */ mbus1_equipment_id_ntc,
+  /* uint8_t */ mbus1_valve_position,
+  /* TimestampedFixedValue */ mbus1_delivered_tc,
+  /* TimestampedFixedValue */ mbus1_delivered_ntc,
+  /* uint16_t */ mbus2_device_type,
+  /* String */ mbus2_equipment_id_tc,
+  /* String */ mbus2_equipment_id_ntc,
+  /* uint8_t */ mbus2_valve_position,
+  /* TimestampedFixedValue */ mbus2_delivered_tc,
+  /* TimestampedFixedValue */ mbus2_delivered_ntc,
+  /* uint16_t */ mbus3_device_type,
+  /* String */ mbus3_equipment_id_tc,
+  /* String */ mbus3_equipment_id_ntc,
+  /* uint8_t */ mbus3_valve_position,
+  /* TimestampedFixedValue */ mbus3_delivered_tc,
+  /* TimestampedFixedValue */ mbus3_delivered_ntc,
+  /* uint16_t */ mbus4_device_type,
+  /* String */ mbus4_equipment_id_tc,
+  /* String */ mbus4_equipment_id_ntc,
+  /* uint8_t */ mbus4_valve_position,
+  /* TimestampedFixedValue */ mbus4_delivered_tc,
+  /* TimestampedFixedValue */ mbus4_delivered_ntc
 >;
 
 /**
@@ -139,7 +148,9 @@ struct Printer {
 
 void setup() {
   Serial.begin(115200);
-
+  while(!Serial) {/*wait a while*/ delay(100);}
+  delay(250);
+  
   MyData data;
   ParseResult<void> res = P1Parser::parse(&data, raw, lengthof(raw), true);
   if (res.err) {

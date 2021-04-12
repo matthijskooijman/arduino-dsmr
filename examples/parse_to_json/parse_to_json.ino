@@ -56,8 +56,8 @@ const char msg1[] =
   "1-0:42.7.0(00.611*kW)\r\n"                           // power_returned_l2
   "1-0:62.7.0(00.486*kW)\r\n"                           // power_returned_l3
   "0-1:24.1.0(003)\r\n"                                 // mbus1_device_type
-  "0-1:96.1.0(4730303339303031363532303530323136)\r\n"  // mbus1_equipment_id
-  "0-1:24.2.1(200408063501S)(00169.156*m3)\r\n"         // mbus1_deliveredTC
+  "0-1:96.1.0(4730303339303031363532303530323136)\r\n"  // mbus1_equipment_id_tc
+  "0-1:24.2.1(200408063501S)(00169.156*m3)\r\n"         // mbus1_delivered_tc
   "!0876\r\n";
 
 //---  Sagemcom XS210 ESMR5 (1Fase)
@@ -89,14 +89,14 @@ const char msg2[] =
   "1-0:22.7.0(00.000*kW)\r\n"                           // power_returned_l1
   "0-1:24.1.0(003)\r\n"                                 // mbus1_device_type
   "0-1:96.1.0(4730303533303987654321373431393137)\r\n"  // mbus1_equipment_id_tc
-  "0-1:24.2.1(632525252525S)(00000.000)\r\n"            // mbus1_delivered_tc
+  "0-1:24.2.1(632525252525S)(00000.000)\r\n"            // mbus1_delivered_tc <-- error (no unit)
   "!DE4A\r\n";
 
 //--- Sagemcom Fluvius ? --(Belgie)
 const char msg3[] =
   "/FLU5\\253769484_A\r\n"      
   "\r\n"                   
-  "0-0:96.1.4(50213)\r\n"                               // p1_version (be)     
+  "0-0:96.1.4(50213)\r\n"                               // p1_version_be     
   "0-0:96.1.1(3153414123456789303638373236)\r\n"        // equiptment_id
   "0-0:1.0.0(191204184601W)\r\n"                        // timestamp
   "1-0:1.8.1(000050.069*kWh)\r\n"                       // energy_delivered_tariff1
@@ -117,9 +117,9 @@ const char msg3[] =
   "1-0:31.4.0(999*A)\r\n"                               // fuse_treshold_l1
   "0-0:96.13.0()\r\n"                                   // message_long
   "0-1:24.1.0(003)\r\n"                                 // mbus1_device_type
-  "0-1:96.1.1(37464C4F32319876543215373430)\r\n"        // mbus1_equipment_id (ntc)
+  "0-1:96.1.1(37464C4F32319876543215373430)\r\n"        // mbus1_equipment_id_ntc
   "0-1:24.4.0(1)\r\n"                                   // mbus1_valve_position
-  "0-1:24.2.3(191204184600W)(00070.043*m3)\r\n"         // mbus1_delivered (ntc)
+  "0-1:24.2.3(191204184600W)(00070.043*m3)\r\n"         // mbus1_delivered_ntc
   "!7934\r\n";        
 
 /**
@@ -128,65 +128,65 @@ const char msg3[] =
  * Each template argument below results in a field of the same name.
  */
 using MyData = ParsedData<
-  /* String */         identification
-  /* String */        ,p1_version
-  /* String */        ,p1_version_be
-  /* String */        ,timestamp
-  /* String */        ,equipment_id
-  /* FixedValue */    ,energy_delivered_tariff1
-  /* FixedValue */    ,energy_delivered_tariff2
-  /* FixedValue */    ,energy_returned_tariff1
-  /* FixedValue */    ,energy_returned_tariff2
-  /* String */        ,electricity_tariff
-  /* FixedValue */    ,power_delivered
-  /* FixedValue */    ,power_returned
-  /* FixedValue */    ,electricity_threshold
-  /* uint8_t */       ,electricity_switch_position
-  /* uint32_t */      ,electricity_failures
-  /* uint32_t */      ,electricity_long_failures
-  /* String */        ,electricity_failure_log
-  /* uint32_t */      ,electricity_sags_l1
-  /* uint32_t */      ,electricity_sags_l2
-  /* uint32_t */      ,electricity_sags_l3
-  /* uint32_t */      ,electricity_swells_l1
-  /* uint32_t */      ,electricity_swells_l2
-  /* uint32_t */      ,electricity_swells_l3
-  /* String */        ,message_short
-  /* String */        ,message_long
-  /* FixedValue */    ,voltage_l1
-  /* FixedValue */    ,voltage_l2
-  /* FixedValue */    ,voltage_l3
-  /* FixedValue */    ,current_l1
-  /* FixedValue */    ,current_l2
-  /* FixedValue */    ,current_l3
-  /* FixedValue */    ,power_delivered_l1
-  /* FixedValue */    ,power_delivered_l2
-  /* FixedValue */    ,power_delivered_l3
-  /* FixedValue */    ,power_returned_l1
-  /* FixedValue */    ,power_returned_l2
-  /* FixedValue */    ,power_returned_l3
-  /* uint16_t */      ,mbus1_device_type
-  /* String */        ,mbus1_equipment_id_tc
-  /* String */        ,mbus1_equipment_id_ntc
-  /* uint8_t */       ,mbus1_valve_position
+  /* String */                 identification
+  /* String */                ,p1_version
+  /* String */                ,p1_version_be
+  /* String */                ,timestamp
+  /* String */                ,equipment_id
+  /* FixedValue */            ,energy_delivered_tariff1
+  /* FixedValue */            ,energy_delivered_tariff2
+  /* FixedValue */            ,energy_returned_tariff1
+  /* FixedValue */            ,energy_returned_tariff2
+  /* String */                ,electricity_tariff
+  /* FixedValue */            ,power_delivered
+  /* FixedValue */            ,power_returned
+  /* FixedValue */            ,electricity_threshold
+  /* uint8_t */               ,electricity_switch_position
+  /* uint32_t */              ,electricity_failures
+  /* uint32_t */              ,electricity_long_failures
+  /* String */                ,electricity_failure_log
+  /* uint32_t */              ,electricity_sags_l1
+  /* uint32_t */              ,electricity_sags_l2
+  /* uint32_t */              ,electricity_sags_l3
+  /* uint32_t */              ,electricity_swells_l1
+  /* uint32_t */              ,electricity_swells_l2
+  /* uint32_t */              ,electricity_swells_l3
+  /* String */                ,message_short
+  /* String */                ,message_long
+  /* FixedValue */            ,voltage_l1
+  /* FixedValue */            ,voltage_l2
+  /* FixedValue */            ,voltage_l3
+  /* FixedValue */            ,current_l1
+  /* FixedValue */            ,current_l2
+  /* FixedValue */            ,current_l3
+  /* FixedValue */            ,power_delivered_l1
+  /* FixedValue */            ,power_delivered_l2
+  /* FixedValue */            ,power_delivered_l3
+  /* FixedValue */            ,power_returned_l1
+  /* FixedValue */            ,power_returned_l2
+  /* FixedValue */            ,power_returned_l3
+  /* uint16_t */              ,mbus1_device_type
+  /* String */                ,mbus1_equipment_id_tc
+  /* String */                ,mbus1_equipment_id_ntc
+  /* uint8_t */               ,mbus1_valve_position
   /* TimestampedFixedValue */ ,mbus1_delivered_tc
   /* TimestampedFixedValue */ ,mbus1_delivered_ntc
-  /* uint16_t */      ,mbus2_device_type
-  /* String */        ,mbus2_equipment_id_tc
-  /* String */        ,mbus2_equipment_id_ntc
-  /* uint8_t */       ,mbus2_valve_position
+  /* uint16_t */              ,mbus2_device_type
+  /* String */                ,mbus2_equipment_id_tc
+  /* String */                ,mbus2_equipment_id_ntc
+  /* uint8_t */               ,mbus2_valve_position
   /* TimestampedFixedValue */ ,mbus2_delivered_tc
   /* TimestampedFixedValue */ ,mbus2_delivered_ntc
-  /* uint16_t */      ,mbus3_device_type
-  /* String */        ,mbus3_equipment_id_tc
-  /* String */        ,mbus3_equipment_id_ntc
-  /* uint8_t */       ,mbus3_valve_position
+  /* uint16_t */              ,mbus3_device_type
+  /* String */                ,mbus3_equipment_id_tc
+  /* String */                ,mbus3_equipment_id_ntc
+  /* uint8_t */               ,mbus3_valve_position
   /* TimestampedFixedValue */ ,mbus3_delivered_tc
   /* TimestampedFixedValue */ ,mbus3_delivered_ntc
-  /* uint16_t */      ,mbus4_device_type
-  /* String */        ,mbus4_equipment_id_tc
-  /* String */        ,mbus4_equipment_id_ntc
-  /* uint8_t */       ,mbus4_valve_position
+  /* uint16_t */              ,mbus4_device_type
+  /* String */                ,mbus4_equipment_id_tc
+  /* String */                ,mbus4_equipment_id_ntc
+  /* uint8_t */               ,mbus4_valve_position
   /* TimestampedFixedValue */ ,mbus4_delivered_tc
   /* TimestampedFixedValue */ ,mbus4_delivered_ntc
 >;
@@ -207,12 +207,13 @@ using MyData = ParsedData<
   char        jsonArrayName[20] = "";
 
 
-struct buildJson {
-
+struct buildJson 
+{
     JsonArray root = jsonDoc.createNestedArray(jsonArrayName);
     
     template<typename Item>
-    void apply(Item &i) {
+    void apply(Item &i) 
+    {
       String Name = Item::name;
 
       if (i.present()) 
@@ -230,15 +231,18 @@ struct buildJson {
   }
   
   template<typename Item>
-  Item& value_to_json(Item& i) {
+  Item& value_to_json(Item& i) 
+  {
     return i;
   }
 
-  String value_to_json(TimestampedFixedValue i) {
+  String value_to_json(TimestampedFixedValue i) 
+  {
     return String(i);
   }
   
-  float value_to_json(FixedValue i) {
+  float value_to_json(FixedValue i) 
+  {
     return i;
   }
 
@@ -266,9 +270,10 @@ void makeJson()
 } // makeJson()
 
 
-void setup() {
+void setup() 
+{
   Serial.begin(115200);
-  delay(1000);
+  delay(250);
   while (!Serial) {/* wait a while */ delay(100); }
   
   Serial.println("\n\nAnd now it begins ...\n");
@@ -296,11 +301,17 @@ void setup() {
   Serial.println("Start parsing telegram 1");
   DSMRdata = {};
   res = P1Parser::parse(&DSMRdata, msg1, lengthof(msg1));
-  if (res.err) {
+  if (res.err) 
+  {
     // Parsing error, show it
     Serial.println(res.fullError(msg1, msg1 + lengthof(msg1)));
-  } else if (!DSMRdata.all_present()) {
+  } 
+  else if (!DSMRdata.all_present()) 
+  {
     Serial.println("DSMR: Some fields are missing");
+    Serial.println("\r\nAs with this library we check for \"Temperature Corrected\" and");
+    Serial.println("\"Not Temperature Corrected\" fields. Normaly only one or the");
+    Serial.println("other is in a telegram. Which explains this message!");
   } 
   // Succesfully parsed, make JSON:
   makeJson();
@@ -310,10 +321,13 @@ void setup() {
   Serial.println("Start parsing telegram 2");
   DSMRdata = {};
   res = P1Parser::parse(&DSMRdata, msg2, lengthof(msg2));
-  if (res.err) {
+  if (res.err) 
+  {
     // Parsing error, show it
     Serial.println(res.fullError(msg2, msg2 + lengthof(msg2)));
-  } else if (!DSMRdata.all_present()) {
+  } 
+  else if (!DSMRdata.all_present()) 
+  {
     Serial.println("DSMR: Some fields are missing");
   } 
   // Succesfully parsed, make JSON:
@@ -324,11 +338,18 @@ void setup() {
   Serial.println("Start parsing telegram 3");
   DSMRdata = {};
   res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3));
-  if (res.err) {
+  if (res.err) 
+  {
     // Parsing error, show it
     Serial.println(res.fullError(msg3, msg3 + lengthof(msg3)));
-  } else if (!DSMRdata.all_present()) {
+  } 
+  else if (!DSMRdata.all_present()) 
+  {
     Serial.println("DSMR: Some fields are missing");
+    Serial.println("\r\nAs with this \"dsmr2Lib\" library we check for \"Temperature Corrected\"");
+    Serial.println("and \"Not Temperature Corrected\" fields. Normaly only one or the");
+    Serial.println("other is in a telegram.");
+    Serial.println("So, the object \"all_present()\" will always return true!");
   } 
   // Succesfully parsed, make JSON:
   makeJson();
