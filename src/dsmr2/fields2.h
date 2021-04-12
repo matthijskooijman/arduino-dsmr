@@ -5,6 +5,21 @@
  *
  * Copyright (c) 2015 Matthijs Kooijman <matthijs@stdin.nl>
  *
+ *------------------------------------------------------------------------------
+ * Changed by Willem Aandewiel
+ * In the original library it is assumed that the Mbus GAS meter is 
+ * always connected to MBUS_ID 1. But this is wrong. Mostly on
+ * an initial installation the GAS meter is at MBUS_ID 1 but if an other
+ * meter is installed it is connected to the first free MBUS_ID. 
+ * So you cannot make any assumption about what mbus is connected to
+ * which MBUS_ID. Therfore it is also not possible to check the units
+ * on the basis of the MBUS_ID. It can be anything.
+ * My assumption is that the device_type of a GAS meter is always "3"
+ * and that of, f.i. a water meter is always "5".
+ * I hope I'm right but have not been able to verify this with the
+ * original documenation. 
+ *------------------------------------------------------------------------------
+ *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -32,7 +47,7 @@
 #define DSMR_INCLUDE_FIELDS_H
 
 #include "util.h"
-#include "parser.h"
+#include "parser2.h"
 
 namespace dsmr {
 
@@ -171,11 +186,6 @@ struct units {
   static constexpr char MJ[] = "MJ";
 };
 
-const uint8_t GAS_MBUS_ID = 1;
-const uint8_t WATER_MBUS_ID = 2;
-const uint8_t THERMAL_MBUS_ID = 3;
-const uint8_t SLAVE_MBUS_ID = 4;
-
 #define DEFINE_FIELD(fieldname, value_t, obis, field_t, field_args...) \
   struct fieldname : field_t<fieldname, ##field_args> { \
     value_t fieldname; \
@@ -193,6 +203,8 @@ DEFINE_FIELD(identification, String, ObisId(255, 255, 255, 255, 255, 255), RawFi
 
 /* Version information for P1 output */
 DEFINE_FIELD(p1_version, String, ObisId(1, 3, 0, 2, 8), StringField, 2, 2);
+/* Version information for P1 output (Belgium)*/
+DEFINE_FIELD(p1_versionBE, String, ObisId(0, 0, 96, 1, 4), StringField, 0, 5);
 
 /* Date-time stamp of the P1 message */
 DEFINE_FIELD(timestamp, String, ObisId(0, 0, 1, 0, 0), TimestampField);
@@ -290,60 +302,63 @@ DEFINE_FIELD(power_returned_l3, FixedValue, ObisId(1, 0, 62, 7, 0), FixedField, 
 
 
 /* Device-Type */
-DEFINE_FIELD(gas_device_type, uint16_t, ObisId(0, GAS_MBUS_ID, 24, 1, 0), IntField, units::none);
-
-/* Equipment identifier (Gas) */
-DEFINE_FIELD(gas_equipment_id, String, ObisId(0, GAS_MBUS_ID, 96, 1, 0), StringField, 0, 96);
-
+DEFINE_FIELD(mbus1_device_type,   uint16_t, ObisId(0, 1, 24, 1, 0), IntField, units::none);
+/* Equipment identifier (GAS?) */
+DEFINE_FIELD(mbus1_equipmentTC_id,    String, ObisId(0, 1, 96, 1, 0), StringField, 0, 96);
+/* Equipment identifier (GAS Not Temp. Corrected) */
+DEFINE_FIELD(mbus1_equipmentNTC_id,  String, ObisId(0, 1, 96, 1, 1), StringField, 0, 96);
 /* Valve position Gas (on/off/released) (Note: Removed in 4.0.7 / 4.2.2 / 5.0). */
-DEFINE_FIELD(gas_valve_position, uint8_t, ObisId(0, GAS_MBUS_ID, 24, 4, 0), IntField, units::none);
-
+DEFINE_FIELD(mbus1_valve_position, uint8_t, ObisId(0, 1, 24, 4, 0), IntField, units::none);
 /* Last 5-minute value (temperature converted), gas delivered to client
  * in m3, including decimal values and capture time (Note: 4.x spec has
  * "hourly value") */
-DEFINE_FIELD(gas_delivered, TimestampedFixedValue, ObisId(0, GAS_MBUS_ID, 24, 2, 1), TimestampedFixedField, units::m3, units::dm3);
+DEFINE_FIELD(mbus1_deliveredTC, TimestampedFixedValue, ObisId(0, 1, 24, 2, 1), TimestampedFixedField, units::m3, units::dm3);
+// OBIS: Last value of ‘not temperature corrected’ gas volume in m³, including decimal values and capture time
+DEFINE_FIELD(mbus1_deliveredNTC, TimestampedFixedValue, ObisId(0, 1, 24, 2, 3), TimestampedFixedField, units::m3, units::dm3);
 
 
 /* Device-Type */
-DEFINE_FIELD(thermal_device_type, uint16_t, ObisId(0, THERMAL_MBUS_ID, 24, 1, 0), IntField, units::none);
-
+DEFINE_FIELD(mbus2_device_type, uint16_t, ObisId(0, 2, 24, 1, 0), IntField, units::none);
 /* Equipment identifier (Thermal: heat or cold) */
-DEFINE_FIELD(thermal_equipment_id, String, ObisId(0, THERMAL_MBUS_ID, 96, 1, 0), StringField, 0, 96);
-
+DEFINE_FIELD(mbus2_equipmentTC_id, String, ObisId(0, 2, 96, 1, 0), StringField, 0, 96);
+/* Equipment identifier (GAS Not Temp. Corrected) */
+DEFINE_FIELD(mbus2_equipmentNTC_id,  String, ObisId(0, 2, 96, 1, 1), StringField, 0, 96);
 /* Valve position (on/off/released) (Note: Removed in 4.0.7 / 4.2.2 / 5.0). */
-DEFINE_FIELD(thermal_valve_position, uint8_t, ObisId(0, THERMAL_MBUS_ID, 24, 4, 0), IntField, units::none);
-
+DEFINE_FIELD(mbus2_valve_position, uint8_t, ObisId(0, 2, 24, 4, 0), IntField, units::none);
 /* Last 5-minute Meter reading Heat or Cold in 0,01 GJ and capture time
  * (Note: 4.x spec has "hourly meter reading") */
-DEFINE_FIELD(thermal_delivered, TimestampedFixedValue, ObisId(0, THERMAL_MBUS_ID, 24, 2, 1), TimestampedFixedField, units::GJ, units::MJ);
+DEFINE_FIELD(mbus2_deliveredTC, TimestampedFixedValue, ObisId(0, 2, 24, 2, 1), TimestampedFixedField, units::GJ, units::MJ);
+// OBIS: Last value of ‘not temperature corrected’ gas volume in m³, including decimal values and capture time
+DEFINE_FIELD(mbus2_deliveredNTC, TimestampedFixedValue, ObisId(0, 2, 24, 2, 3), TimestampedFixedField, units::m3, units::dm3);
 
 
 /* Device-Type */
-DEFINE_FIELD(water_device_type, uint16_t, ObisId(0, WATER_MBUS_ID, 24, 1, 0), IntField, units::none);
-
+DEFINE_FIELD(mbus3_device_type, uint16_t, ObisId(0, 3, 24, 1, 0), IntField, units::none);
 /* Equipment identifier (Thermal: heat or cold) */
-DEFINE_FIELD(water_equipment_id, String, ObisId(0, WATER_MBUS_ID, 96, 1, 0), StringField, 0, 96);
-
+DEFINE_FIELD(mbus3_equipmentTC_id, String, ObisId(0, 3, 96, 1, 0), StringField, 0, 96);
+/* Equipment identifier (GAS Not Temp. Corrected) */
+DEFINE_FIELD(mbus3_equipmentNTC_id,  String, ObisId(0, 3, 96, 1, 1), StringField, 0, 96);
 /* Valve position (on/off/released) (Note: Removed in 4.0.7 / 4.2.2 / 5.0). */
-DEFINE_FIELD(water_valve_position, uint8_t, ObisId(0, WATER_MBUS_ID, 24, 4, 0), IntField, units::none);
-
+DEFINE_FIELD(mbus3_valve_position, uint8_t, ObisId(0, 3, 24, 4, 0), IntField, units::none);
 /* Last 5-minute Meter reading in 0,001 m3 and capture time
  * (Note: 4.x spec has "hourly meter reading") */
-DEFINE_FIELD(water_delivered, TimestampedFixedValue, ObisId(0, WATER_MBUS_ID, 24, 2, 1), TimestampedFixedField, units::m3, units::dm3);
-
+DEFINE_FIELD(mbus3_deliveredTC, TimestampedFixedValue, ObisId(0, 3, 24, 2, 1), TimestampedFixedField, units::m3, units::dm3);
+// OBIS: Last value of ‘not temperature corrected’ gas volume in m³, including decimal values and capture time
+DEFINE_FIELD(mbus3_deliveredNTC, TimestampedFixedValue, ObisId(0, 3, 24, 2, 3), TimestampedFixedField, units::m3, units::dm3);
 
 /* Device-Type */
-DEFINE_FIELD(slave_device_type, uint16_t, ObisId(0, SLAVE_MBUS_ID, 24, 1, 0), IntField, units::none);
-
+DEFINE_FIELD(mbus4_device_type, uint16_t, ObisId(0, 4, 24, 1, 0), IntField, units::none);
 /* Equipment identifier (Thermal: heat or cold) */
-DEFINE_FIELD(slave_equipment_id, String, ObisId(0, SLAVE_MBUS_ID, 96, 1, 0), StringField, 0, 96);
-
+DEFINE_FIELD(mbus4_equipmentTC_id, String, ObisId(0, 4, 96, 1, 0), StringField, 0, 96);
+/* Equipment identifier (GAS Not Temp. Corrected) */
+DEFINE_FIELD(mbus4_equipmentNTC_id,  String, ObisId(0, 4, 96, 1, 1), StringField, 0, 96);
 /* Valve position (on/off/released) (Note: Removed in 4.0.7 / 4.2.2 / 5.0). */
-DEFINE_FIELD(slave_valve_position, uint8_t, ObisId(0, SLAVE_MBUS_ID, 24, 4, 0), IntField, units::none);
-
-/* Last 5-minute Meter reading Heat or Cold and capture time (e.g. slave
+DEFINE_FIELD(mbus4_valve_position, uint8_t, ObisId(0, 4, 24, 4, 0), IntField, units::none);
+/* Last 5-minute Meter reading Heat or Cold and capture time (e.g. mbus
  * E meter) (Note: 4.x spec has "hourly meter reading") */
-DEFINE_FIELD(slave_delivered, TimestampedFixedValue, ObisId(0, SLAVE_MBUS_ID, 24, 2, 1), TimestampedFixedField, units::m3, units::dm3);
+DEFINE_FIELD(mbus4_deliveredTC, TimestampedFixedValue, ObisId(0, 4, 24, 2, 1), TimestampedFixedField, units::m3, units::dm3);
+// OBIS: Last value of ‘not temperature corrected’ gas volume in m³, including decimal values and capture time
+DEFINE_FIELD(mbus4_deliveredNTC, TimestampedFixedValue, ObisId(0, 4, 24, 2, 3), TimestampedFixedField, units::m3, units::dm3);
 
 } // namespace fields
 

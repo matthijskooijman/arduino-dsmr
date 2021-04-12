@@ -5,6 +5,21 @@
  *
  * Copyright (c) 2015 Matthijs Kooijman <matthijs@stdin.nl>
  *
+ *------------------------------------------------------------------------------
+ * Changed by Willem Aandewiel
+ * In the original library it is assumed that the Mbus GAS meter is 
+ * always connected to MBUS_ID 1. But this is wrong. Mostly on
+ * an initial installation the GAS meter is at MBUS_ID 1 but if an other
+ * meter is installed it is connected to the first free MBUS_ID. 
+ * So you cannot make any assumption about what mbus is connected to
+ * which MBUS_ID. Therfore it is also not possible to check the units
+ * on the basis of the MBUS_ID. It can be anything.
+ * My assumption is that the device_type of a GAS meter is always "3"
+ * and that of, f.i. a water meter is always "5".
+ * I hope I'm right but have not been able to verify this with the
+ * original documenation. 
+ *------------------------------------------------------------------------------
+ *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -28,7 +43,7 @@
  * Field parsing functions
  */
 
-#include "fields.h"
+#include "fields2.h"
 
 
 using namespace dsmr;
@@ -59,6 +74,10 @@ constexpr const __FlashStringHelper *identification::name;
 constexpr ObisId p1_version::id;
 constexpr char p1_version::name_progmem[];
 constexpr const __FlashStringHelper *p1_version::name;
+
+constexpr ObisId p1_versionBE::id;
+constexpr char p1_versionBE::name_progmem[];
+constexpr const __FlashStringHelper *p1_versionBE::name;
 
 constexpr ObisId timestamp::id;
 constexpr char timestamp::name_progmem[];
@@ -196,67 +215,99 @@ constexpr ObisId power_returned_l3::id;
 constexpr char power_returned_l3::name_progmem[];
 constexpr const __FlashStringHelper *power_returned_l3::name;
 
-constexpr ObisId gas_device_type::id;
-constexpr char gas_device_type::name_progmem[];
-constexpr const __FlashStringHelper *gas_device_type::name;
+constexpr ObisId mbus1_device_type::id;
+constexpr char mbus1_device_type::name_progmem[];
+constexpr const __FlashStringHelper *mbus1_device_type::name;
 
-constexpr ObisId gas_equipment_id::id;
-constexpr char gas_equipment_id::name_progmem[];
-constexpr const __FlashStringHelper *gas_equipment_id::name;
+constexpr ObisId mbus1_equipmentTC_id::id;
+constexpr char mbus1_equipmentTC_id::name_progmem[];
+constexpr const __FlashStringHelper *mbus1_equipmentTC_id::name;
 
-constexpr ObisId gas_valve_position::id;
-constexpr char gas_valve_position::name_progmem[];
-constexpr const __FlashStringHelper *gas_valve_position::name;
+constexpr ObisId mbus1_equipmentNTC_id::id;
+constexpr char mbus1_equipmentNTC_id::name_progmem[];
+constexpr const __FlashStringHelper *mbus1_equipmentNTC_id::name;
 
-constexpr ObisId gas_delivered::id;
-constexpr char gas_delivered::name_progmem[];
-constexpr const __FlashStringHelper *gas_delivered::name;
+constexpr ObisId mbus1_valve_position::id;
+constexpr char mbus1_valve_position::name_progmem[];
+constexpr const __FlashStringHelper *mbus1_valve_position::name;
 
-constexpr ObisId thermal_device_type::id;
-constexpr char thermal_device_type::name_progmem[];
-constexpr const __FlashStringHelper *thermal_device_type::name;
+constexpr ObisId mbus1_deliveredTC::id;
+constexpr char mbus1_deliveredTC::name_progmem[];
+constexpr const __FlashStringHelper *mbus1_deliveredTC::name;
 
-constexpr ObisId thermal_equipment_id::id;
-constexpr char thermal_equipment_id::name_progmem[];
-constexpr const __FlashStringHelper *thermal_equipment_id::name;
+constexpr ObisId mbus1_deliveredNTC::id;
+constexpr char mbus1_deliveredNTC::name_progmem[];
+constexpr const __FlashStringHelper *mbus1_deliveredNTC::name;
 
-constexpr ObisId thermal_valve_position::id;
-constexpr char thermal_valve_position::name_progmem[];
-constexpr const __FlashStringHelper *thermal_valve_position::name;
+constexpr ObisId mbus2_device_type::id;
+constexpr char mbus2_device_type::name_progmem[];
+constexpr const __FlashStringHelper *mbus2_device_type::name;
 
-constexpr ObisId thermal_delivered::id;
-constexpr char thermal_delivered::name_progmem[];
-constexpr const __FlashStringHelper *thermal_delivered::name;
+constexpr ObisId mbus2_equipment_id::id;
+constexpr char mbus2_equipment_id::name_progmem[];
+constexpr const __FlashStringHelper *mbus2_equipment_id::name;
 
-constexpr ObisId water_device_type::id;
-constexpr char water_device_type::name_progmem[];
-constexpr const __FlashStringHelper *water_device_type::name;
+constexpr ObisId mbus2NTC_equipment_id::id;
+constexpr char mbus2NTC_equipment_id::name_progmem[];
+constexpr const __FlashStringHelper *mbus2NTC_equipment_id::name;
 
-constexpr ObisId water_equipment_id::id;
-constexpr char water_equipment_id::name_progmem[];
-constexpr const __FlashStringHelper *water_equipment_id::name;
+constexpr ObisId mbus2_valve_position::id;
+constexpr char mbus2_valve_position::name_progmem[];
+constexpr const __FlashStringHelper *mbus2_valve_position::name;
 
-constexpr ObisId water_valve_position::id;
-constexpr char water_valve_position::name_progmem[];
-constexpr const __FlashStringHelper *water_valve_position::name;
+constexpr ObisId mbus2_deliveredTC::id;
+constexpr char mbus2_deliveredTC::name_progmem[];
+constexpr const __FlashStringHelper *mbus2_deliveredTC::name;
 
-constexpr ObisId water_delivered::id;
-constexpr char water_delivered::name_progmem[];
-constexpr const __FlashStringHelper *water_delivered::name;
+constexpr ObisId mbus2_deliveredTCNTC::id;
+constexpr char mbus2_deliveredTCNTC::name_progmem[];
+constexpr const __FlashStringHelper *mbus2_deliveredTCNTC::name;
 
-constexpr ObisId slave_device_type::id;
-constexpr char slave_device_type::name_progmem[];
-constexpr const __FlashStringHelper *slave_device_type::name;
+constexpr ObisId mbus3_device_type::id;
+constexpr char mbus3_device_type::name_progmem[];
+constexpr const __FlashStringHelper *mbus3_device_type::name;
 
-constexpr ObisId slave_equipment_id::id;
-constexpr char slave_equipment_id::name_progmem[];
-constexpr const __FlashStringHelper *slave_equipment_id::name;
+constexpr ObisId mbus3_equipment_id::id;
+constexpr char mbus3_equipment_id::name_progmem[];
+constexpr const __FlashStringHelper *mbus3_equipment_id::name;
 
-constexpr ObisId slave_valve_position::id;
-constexpr char slave_valve_position::name_progmem[];
-constexpr const __FlashStringHelper *slave_valve_position::name;
+constexpr ObisId mbus3NTC_equipment_id::id;
+constexpr char mbus3NTC_equipment_id::name_progmem[];
+constexpr const __FlashStringHelper *mbus3NTC_equipment_id::name;
 
-constexpr ObisId slave_delivered::id;
-constexpr char slave_delivered::name_progmem[];
-constexpr const __FlashStringHelper *slave_delivered::name;
+constexpr ObisId mbus3_valve_position::id;
+constexpr char mbus3_valve_position::name_progmem[];
+constexpr const __FlashStringHelper *mbus3_valve_position::name;
+
+constexpr ObisId mbus3_deliveredTC::id;
+constexpr char mbus3_deliveredTC::name_progmem[];
+constexpr const __FlashStringHelper *mbus3_deliveredTC::name;
+
+constexpr ObisId mbus3_deliveredTCNTC::id;
+constexpr char mbus3_deliveredTCNTC::name_progmem[];
+constexpr const __FlashStringHelper *mbus3_deliveredTCNTC::name;
+
+constexpr ObisId mbus4_device_type::id;
+constexpr char mbus4_device_type::name_progmem[];
+constexpr const __FlashStringHelper *mbus4_device_type::name;
+
+constexpr ObisId mbus4_equipment_id::id;
+constexpr char mbus4_equipment_id::name_progmem[];
+constexpr const __FlashStringHelper *mbus4_equipment_id::name;
+
+constexpr ObisId mbus4NTC_equipment_id::id;
+constexpr char mbus4NTC_equipment_id::name_progmem[];
+constexpr const __FlashStringHelper *mbus4NTC_equipment_id::name;
+
+constexpr ObisId mbus4_valve_position::id;
+constexpr char mbus4_valve_position::name_progmem[];
+constexpr const __FlashStringHelper *mbus4_valve_position::name;
+
+constexpr ObisId mbus4_deliveredTC::id;
+constexpr char mbus4_deliveredTC::name_progmem[];
+constexpr const __FlashStringHelper *mbus4_deliveredTC::name;
+
+constexpr ObisId mbus4_deliveredTCNTC::id;
+constexpr char mbus4_deliveredTCNTC::name_progmem[];
+constexpr const __FlashStringHelper *mbus4_deliveredTCNTC::name;
 

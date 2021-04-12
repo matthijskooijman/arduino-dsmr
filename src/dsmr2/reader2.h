@@ -35,7 +35,7 @@
 #include <Arduino.h>
 #include "crc16.h"
 
-#include "parser.h"
+#include "parser2.h"
 
 namespace dsmr {
 

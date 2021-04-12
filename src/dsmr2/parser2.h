@@ -5,6 +5,11 @@
  *
  * Copyright (c) 2015 Matthijs Kooijman <matthijs@stdin.nl>
  *
+ *------------------------------------------------------------------------------
+ * Changed by Willem Aandewiel
+ * - Skip UNIT test (it should test for the unit but not raise an error)
+ *------------------------------------------------------------------------------
+ *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -217,10 +222,18 @@ struct NumParser {
       const char *unit_start = ++num_end; // skip *
       while(num_end < end && *num_end != ')' && *unit) {
         if (*num_end++ != *unit++)
-          return res.fail((const __FlashStringHelper*)INVALID_UNIT, unit_start);
+        {
+          //--AaW accept all unit's 
+          //--AaW don't raise an error 
+          //return res.fail((const __FlashStringHelper*)INVALID_UNIT, unit_start);
+        }
       }
       if (*unit)
-        return res.fail((const __FlashStringHelper*)INVALID_UNIT, unit_start);
+      {
+        //--AaW accept all unit's 
+        //--AaW don't raise an error 
+        //return res.fail((const __FlashStringHelper*)INVALID_UNIT, unit_start);
+      }
     }
 
     if (num_end >= end || *num_end != ')')
