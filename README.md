@@ -27,7 +27,7 @@ There are two type of GAS meters: "Temperature Compensated" and
 My assumption is that de device_type of a GAS meter is always "3". If that
 is not the case: all bets are off.
 
-Do not try to use this library for soemthing usefull with an Arduino UNO
+Do not try to use this library for something usefull with an Arduino UNO
 (atmega328) as it will not work but .. it will not raise an error so your
 completely "in the blind"! (see <a href="https://github.com/matthijskooijman/arduino-dsmr/issues/13">this issue</a>)
 
