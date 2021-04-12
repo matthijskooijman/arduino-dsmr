@@ -11,20 +11,25 @@ should be possible to adapt for use outside of the Arduino environment.
 When using Arduino, version 1.6.6 or above is required because this
 library needs C++11 support which was enabled in that version.
 
-Changed by Willem Aandewiel
-===========================
+Modyfied by Willem Aandewiel
+============================
 The assumtion of the original library by Matthijs Kooijman is that the GAS meter
 is always connected to MBUS_ID 1 .. which is not the case. If a GAS meter is
-replaced it will be connected to the first free MBUS_ID and that could be 
+replaced it can/will be connected to the first free MBUS_ID and that could be 
 anything..
 That has some implications for parsing, for instance, the unit's. The unit 
 should be parsed and used but should not raise an error as we don't know what
 meter is connected and what unit's it will use. So I removed the units check
 but it would be better to have some kind of "wild card" unit.
-Also: there are two type of GAS meters: "Temperature Compensated" and
-"Not Temperature Compensated". 
+
+There are two type of GAS meters: "Temperature Compensated" and
+"Not Temperature Compensated" meters. 
 My assumption is that de device_type of a GAS meter is always "3". If that
 is not the case: all bets are off.
+
+Do not try to use this library for soemthing usefull with an Arduino UNO
+(atmega328) as it will not work but .. it will not raise an error so your
+completely "in the blind"! (see <a href="https://github.com/matthijskooijman/arduino-dsmr/issues/13">this issue</a>)
 
 
 Protocol
