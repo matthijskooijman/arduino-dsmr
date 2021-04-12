@@ -9,7 +9,7 @@
  * the result.
 */
 
-#include "dsmr.h"
+#include "dsmr2.h"
 #include <ArduinoJson.h>
 
 //--- if you have a real Slimme Meter connected ---
@@ -55,9 +55,9 @@ const char msg1[] =
   "1-0:22.7.0(00.013*kW)\r\n"                           // power_returned_l1
   "1-0:42.7.0(00.611*kW)\r\n"                           // power_returned_l2
   "1-0:62.7.0(00.486*kW)\r\n"                           // power_returned_l3
-  "0-1:24.1.0(003)\r\n"                                 // gas_device_type
-  "0-1:96.1.0(4730303339303031363532303530323136)\r\n"  // gas_equipment_id
-  "0-1:24.2.1(200408063501S)(00169.156*m3)\r\n"         // gas_delivered
+  "0-1:24.1.0(003)\r\n"                                 // mbus1_device_type
+  "0-1:96.1.0(4730303339303031363532303530323136)\r\n"  // mbus1_equipment_id
+  "0-1:24.2.1(200408063501S)(00169.156*m3)\r\n"         // mbus1_deliveredTC
   "!0876\r\n";
 
 //---  Sagemcom XS210 ESMR5 (1Fase)
@@ -87,9 +87,9 @@ const char msg2[] =
   "1-0:31.7.0(000*A)\r\n"                               // current_l1
   "1-0:21.7.0(00.037*kW)\r\n"                           // power_delivered_l1
   "1-0:22.7.0(00.000*kW)\r\n"                           // power_returned_l1
-  "0-1:24.1.0(003)\r\n"                                 // gas_device_type
-  "0-1:96.1.0(4730303533303987654321373431393137)\r\n"  // gas_equipment_id
-  "0-1:24.2.1(632525252525S)(00000.000)\r\n"            // gas_delivered
+  "0-1:24.1.0(003)\r\n"                                 // mbus1_device_type
+  "0-1:96.1.0(4730303533303987654321373431393137)\r\n"  // mbus1_equipment_id_tc
+  "0-1:24.2.1(632525252525S)(00000.000)\r\n"            // mbus1_delivered_tc
   "!DE4A\r\n";
 
 //--- Sagemcom Fluvius ? --(Belgie)
@@ -116,10 +116,10 @@ const char msg3[] =
   "0-0:17.0.0(999.9*kW)\r\n"                            // electricity_threshold
   "1-0:31.4.0(999*A)\r\n"                               // fuse_treshold_l1
   "0-0:96.13.0()\r\n"                                   // message_long
-  "0-1:24.1.0(003)\r\n"                                 // gas_device_type
-  "0-1:96.1.1(37464C4F32319876543215373430)\r\n"        // gas_equipment_id (be) *NOT PROCESSED*
-  "0-1:24.4.0(1)\r\n"                                   // gas_valve_position
-  "0-1:24.2.3(191204184600W)(00070.043*m3)\r\n"         // gas_delivered (be)    *NOT PROCESSED*
+  "0-1:24.1.0(003)\r\n"                                 // mbus1_device_type
+  "0-1:96.1.1(37464C4F32319876543215373430)\r\n"        // mbus1_equipment_id (ntc) *NOT PROCESSED*
+  "0-1:24.4.0(1)\r\n"                                   // mbus1_valve_position
+  "0-1:24.2.3(191204184600W)(00070.043*m3)\r\n"         // mbus1_delivered (ntc)    *NOT PROCESSED*
   "!7934\r\n";        
 
 /**
@@ -130,6 +130,7 @@ const char msg3[] =
 using MyData = ParsedData<
   /* String */         identification
   /* String */        ,p1_version
+  /* String */        ,p1_version_be
   /* String */        ,timestamp
   /* String */        ,equipment_id
   /* FixedValue */    ,energy_delivered_tariff1
@@ -164,22 +165,30 @@ using MyData = ParsedData<
   /* FixedValue */    ,power_returned_l1
   /* FixedValue */    ,power_returned_l2
   /* FixedValue */    ,power_returned_l3
-  /* uint16_t */      ,gas_device_type
-  /* String */        ,gas_equipment_id
-  /* uint8_t */       ,gas_valve_position
-  /* TimestampedFixedValue */ ,gas_delivered
-  /* uint16_t */      ,thermal_device_type
-  /* String */        ,thermal_equipment_id
-  /* uint8_t */       ,thermal_valve_position
-  /* TimestampedFixedValue */ ,thermal_delivered
-  /* uint16_t */      ,water_device_type
-  /* String */        ,water_equipment_id
-  /* uint8_t */       ,water_valve_position
-  /* TimestampedFixedValue */ ,water_delivered
-  /* uint16_t */      ,slave_device_type
-  /* String */        ,slave_equipment_id
-  /* uint8_t */       ,slave_valve_position
-  /* TimestampedFixedValue */ ,slave_delivered
+  /* uint16_t */      ,mbus1_device_type
+  /* String */        ,mbus1_equipment_id_tc
+  /* String */        ,mbus1_equipment_id_ntc
+  /* uint8_t */       ,mbus1_valve_position
+  /* TimestampedFixedValue */ ,mbus1_delivered_tc
+  /* TimestampedFixedValue */ ,mbus1_delivered_ntc
+  /* uint16_t */      ,mbus2_device_type
+  /* String */        ,mbus2_equipment_id_tc
+  /* String */        ,mbus2_equipment_id_ntc
+  /* uint8_t */       ,mbus2_valve_position
+  /* TimestampedFixedValue */ ,mbus2_delivered_tc
+  /* TimestampedFixedValue */ ,mbus2_delivered_ntc
+  /* uint16_t */      ,mbus3_device_type
+  /* String */        ,mbus3_equipment_id_tc
+  /* String */        ,mbus3_equipment_id_ntc
+  /* uint8_t */       ,mbus3_valve_position
+  /* TimestampedFixedValue */ ,mbus3_delivered_tc
+  /* TimestampedFixedValue */ ,mbus3_delivered_ntc
+  /* uint16_t */      ,mbus4_device_type
+  /* String */        ,mbus4_equipment_id_tc
+  /* String */        ,mbus4_equipment_id_ntc
+  /* uint8_t */       ,mbus4_valve_position
+  /* TimestampedFixedValue */ ,mbus4_delivered_tc
+  /* TimestampedFixedValue */ ,mbus4_delivered_ntc
 >;
 
 #if defined(READSLIMMEMETER)
