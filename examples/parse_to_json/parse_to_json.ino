@@ -10,7 +10,7 @@
 */
 
 #include "dsmr2.h"
-#include <ArduinoJson.h>
+#include <ArduinoJson.h>  // needs version 6+
 
 //--- if you have a real Slimme Meter connected ---
 //--- activate the next two #defines --------------
@@ -96,7 +96,7 @@ const char msg2[] =
 const char msg3[] =
   "/FLU5\\253769484_A\r\n"      
   "\r\n"                   
-  "0-0:96.1.4(50213)\r\n"                               // p1_version (be)       *NOT PROCESSED*
+  "0-0:96.1.4(50213)\r\n"                               // p1_version (be)     
   "0-0:96.1.1(3153414123456789303638373236)\r\n"        // equiptment_id
   "0-0:1.0.0(191204184601W)\r\n"                        // timestamp
   "1-0:1.8.1(000050.069*kWh)\r\n"                       // energy_delivered_tariff1
@@ -117,9 +117,9 @@ const char msg3[] =
   "1-0:31.4.0(999*A)\r\n"                               // fuse_treshold_l1
   "0-0:96.13.0()\r\n"                                   // message_long
   "0-1:24.1.0(003)\r\n"                                 // mbus1_device_type
-  "0-1:96.1.1(37464C4F32319876543215373430)\r\n"        // mbus1_equipment_id (ntc) *NOT PROCESSED*
+  "0-1:96.1.1(37464C4F32319876543215373430)\r\n"        // mbus1_equipment_id (ntc)
   "0-1:24.4.0(1)\r\n"                                   // mbus1_valve_position
-  "0-1:24.2.3(191204184600W)(00070.043*m3)\r\n"         // mbus1_delivered (ntc)    *NOT PROCESSED*
+  "0-1:24.2.3(191204184600W)(00070.043*m3)\r\n"         // mbus1_delivered (ntc)
   "!7934\r\n";        
 
 /**
@@ -268,6 +268,9 @@ void makeJson()
 
 void setup() {
   Serial.begin(115200);
+  delay(1000);
+  while (!Serial) {/* wait a while */ delay(100); }
+  
   Serial.println("\n\nAnd now it begins ...\n");
 
   Serial.println(ESP.getResetReason());
