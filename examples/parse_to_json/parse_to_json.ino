@@ -116,11 +116,23 @@ const char msg3[] =
   "0-0:17.0.0(999.9*kW)\r\n"                            // electricity_threshold
   "1-0:31.4.0(999*A)\r\n"                               // fuse_treshold_l1
   "0-0:96.13.0()\r\n"                                   // message_long
-  "0-1:24.1.0(003)\r\n"                                 // mbus1_device_type
-  "0-1:96.1.1(37464C4F32319876543215373430)\r\n"        // mbus1_equipment_id_ntc
-  "0-1:24.4.0(1)\r\n"                                   // mbus1_valve_position
-  "0-1:24.2.3(191204184600W)(00070.043*m3)\r\n"         // mbus1_delivered_ntc
-  "!7934\r\n";        
+  "0-1:24.1.0(3)\r\n"                                   // mbus1_device_type
+  "0-1:96.1.0(4730301234567031363532303511111111)\r\n"  // mbus1_equipment_id_tc
+  "0-1:24.3.0(140101004100)(08)(60)(1)(0-1:24.2.1)(m3)\r\n" // mbus1_delivered_dbl
+  "(00111.006)\r\n"                                         // mbus1_delivered_dbl (line 2)
+  "0-3:24.1.0(3)\r\n"                                   // mbus3_device_type
+  "0-3:96.1.0(4730301234567031363532303333333333)\r\n"  // mbus3_equipment_id_tc
+  "0-3:24.3.0(140101004100)(08)(60)(1)(0-3:24.2.1)(m3)\r\n" // mbus3_delivered_dbl
+  "(00333.006)\r\n"
+  "0-2:24.1.0(3)\r\n"                                   // mbus2_device_type
+  "0-2:96.1.0(4730301234567031363532303222222222)\r\n"  // mbus2_equipment_id_tc
+  "0-2:24.3.0(140101004100)(08)(60)(1)(0-2:24.2.1)(m3)\r\n" // mbus2_delivered_dbl
+  "(00222.006)\r\n"
+  "0-4:24.1.0(3)\r\n"                                   // mbus4_device_type
+  "0-4:96.1.0(47303012345670313635323034444444444)\r\n" // mbus4_equipment_id_tc
+  "0-4:24.3.0(140101004100)(08)(60)(1)(0-4:24.2.1)(m3)\r\n" // mbus4_delivered_dbl
+  "(00444.006)\r\n"
+  "!7934\r\n";    //<-- wrong checksum! don't check it!    
 
 /**
  * Define the data we're interested in, as well as the datastructure to
@@ -171,24 +183,28 @@ using MyData = ParsedData<
   /* uint8_t */               ,mbus1_valve_position
   /* TimestampedFixedValue */ ,mbus1_delivered_tc
   /* TimestampedFixedValue */ ,mbus1_delivered_ntc
+  /* TimestampedFixedValue */ ,mbus1_delivered_dbl
   /* uint16_t */              ,mbus2_device_type
   /* String */                ,mbus2_equipment_id_tc
   /* String */                ,mbus2_equipment_id_ntc
   /* uint8_t */               ,mbus2_valve_position
   /* TimestampedFixedValue */ ,mbus2_delivered_tc
   /* TimestampedFixedValue */ ,mbus2_delivered_ntc
+  /* TimestampedFixedValue */ ,mbus2_delivered_dbl
   /* uint16_t */              ,mbus3_device_type
   /* String */                ,mbus3_equipment_id_tc
   /* String */                ,mbus3_equipment_id_ntc
   /* uint8_t */               ,mbus3_valve_position
   /* TimestampedFixedValue */ ,mbus3_delivered_tc
   /* TimestampedFixedValue */ ,mbus3_delivered_ntc
+  /* TimestampedFixedValue */ ,mbus3_delivered_dbl
   /* uint16_t */              ,mbus4_device_type
   /* String */                ,mbus4_equipment_id_tc
   /* String */                ,mbus4_equipment_id_ntc
   /* uint8_t */               ,mbus4_valve_position
   /* TimestampedFixedValue */ ,mbus4_delivered_tc
   /* TimestampedFixedValue */ ,mbus4_delivered_ntc
+  /* TimestampedFixedValue */ ,mbus4_delivered_dbl
 >;
 
 #if defined(READSLIMMEMETER)
@@ -298,9 +314,9 @@ void setup()
   ParseResult<void> res;
   //--- read first telegram ---
   Serial.println("\r\n====================================================");
-  Serial.println("Start parsing telegram 1");
+  Serial.println("Start parsing telegram 1 (stop parsing at error)");
   DSMRdata = {};
-  res = P1Parser::parse(&DSMRdata, msg1, lengthof(msg1));
+  res = P1Parser::parse(&DSMRdata, msg1, lengthof(msg1), true, true);
   if (res.err) 
   {
     // Parsing error, show it
@@ -309,18 +325,20 @@ void setup()
   else if (!DSMRdata.all_present()) 
   {
     Serial.println("DSMR: Some fields are missing");
-    Serial.println("\r\nAs with this library we check for \"Temperature Corrected\" and");
-    Serial.println("\"Not Temperature Corrected\" fields. Normaly only one or the");
-    Serial.println("other is in a telegram. Which explains this message!");
-  } 
+    Serial.println("\r\nAs with this \"dsmr2Lib\" library we check for the \"mbusx_delivered_\"");
+    Serial.println("\"Temperature Corrected (tc)\", \"Not Temperature Corrected (ntc)\" and ");
+    Serial.println("\"double lines (dbl)\" fields."); 
+    Serial.println("Normaly only one or the other is in a telegram.");
+    Serial.println("So, the object \"all_present()\" will always return false!");  } 
   // Succesfully parsed, make JSON:
   makeJson();
 
   //--- read second telegram ---
   Serial.println("\r\n====================================================");
-  Serial.println("Start parsing telegram 2");
+  Serial.println("Start parsing telegram 2 (continue parsing after error)");
   DSMRdata = {};
-  res = P1Parser::parse(&DSMRdata, msg2, lengthof(msg2));
+  //-------------------- continue parsing after an error vv     vv-- do check CheckSum!
+  res = P1Parser::parse(&DSMRdata, msg2, lengthof(msg2), false, true);
   if (res.err) 
   {
     // Parsing error, show it
@@ -335,9 +353,10 @@ void setup()
 
   //--- read third telegram ---
   Serial.println("\r\n====================================================");
-  Serial.println("Start parsing telegram 3");
+  Serial.println("Start parsing telegram 3 (don't stop after error and don't check CheckSum)");
   DSMRdata = {};
-  res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3));
+  //-------------------- continue parsing after an error vv     vv-- don't check CheckSum!
+  res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3), false, false); 
   if (res.err) 
   {
     // Parsing error, show it
@@ -346,10 +365,11 @@ void setup()
   else if (!DSMRdata.all_present()) 
   {
     Serial.println("DSMR: Some fields are missing");
-    Serial.println("\r\nAs with this \"dsmr2Lib\" library we check for \"Temperature Corrected\"");
-    Serial.println("and \"Not Temperature Corrected\" fields. Normaly only one or the");
-    Serial.println("other is in a telegram.");
-    Serial.println("So, the object \"all_present()\" will always return true!");
+    Serial.println("\r\nAs with this \"dsmr2Lib\" library we check for the \"mbusx_delivered_\"");
+    Serial.println("\"Temperature Corrected (tc)\", \"Not Temperature Corrected (ntc)\" and ");
+    Serial.println("\"double lines (dbl)\" fields."); 
+    Serial.println("Normaly only one or the other is in a telegram.");
+    Serial.println("So, the object \"all_present()\" will always return false!");
   } 
   // Succesfully parsed, make JSON:
   makeJson();

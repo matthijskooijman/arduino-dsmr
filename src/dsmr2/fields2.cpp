@@ -239,6 +239,10 @@ constexpr ObisId mbus1_delivered_ntc::id;
 constexpr char mbus1_delivered_ntc::name_progmem[];
 constexpr const __FlashStringHelper *mbus1_delivered_ntc::name;
 
+constexpr ObisId mbus1_delivered_dbl::id;
+constexpr char mbus1_delivered_dbl::name_progmem[];
+constexpr const __FlashStringHelper *mbus1_delivered_dbl::name;
+
 constexpr ObisId mbus2_device_type::id;
 constexpr char mbus2_device_type::name_progmem[];
 constexpr const __FlashStringHelper *mbus2_device_type::name;
@@ -250,6 +254,10 @@ constexpr const __FlashStringHelper *mbus2_equipment_id_tc::name;
 constexpr ObisId mbus2_equipment_id_ntc::id;
 constexpr char mbus2_equipment_id_ntc::name_progmem[];
 constexpr const __FlashStringHelper *mbus2_equipment_id_ntc::name;
+
+constexpr ObisId mbus2_delivered_dbl::id;
+constexpr char mbus2_delivered_dbl::name_progmem[];
+constexpr const __FlashStringHelper *mbus2_delivered_dbl::name;
 
 constexpr ObisId mbus2_valve_position::id;
 constexpr char mbus2_valve_position::name_progmem[];
@@ -287,6 +295,10 @@ constexpr ObisId mbus3_delivered_ntc::id;
 constexpr char mbus3_delivered_ntc::name_progmem[];
 constexpr const __FlashStringHelper *mbus3_delivered_ntc::name;
 
+constexpr ObisId mbus3_delivered_dbl::id;
+constexpr char mbus3_delivered_dbl::name_progmem[];
+constexpr const __FlashStringHelper *mbus3_delivered_dbl::name;
+
 constexpr ObisId mbus4_device_type::id;
 constexpr char mbus4_device_type::name_progmem[];
 constexpr const __FlashStringHelper *mbus4_device_type::name;
@@ -310,4 +322,8 @@ constexpr const __FlashStringHelper *mbus4_delivered_tc::name;
 constexpr ObisId mbus4_delivered_ntc::id;
 constexpr char mbus4_delivered_ntc::name_progmem[];
 constexpr const __FlashStringHelper *mbus4_delivered_ntc::name;
+
+constexpr ObisId mbus4_delivered_dbl::id;
+constexpr char mbus4_delivered_dbl::name_progmem[];
+constexpr const __FlashStringHelper *mbus4_delivered_dbl::name;
 
