@@ -380,7 +380,7 @@ DEFINE_FIELD(mbus1_valve_position, uint8_t, ObisId(0, 1, 24, 4, 0), IntField, un
 /* Last 5-minute value (temperature converted), delivered to client
  * in m3, including decimal values and capture time (Note: 4.x spec has
  * "hourly value") */
-DEFINE_FIELD(mbus1_delivered_tc, TimestampedFixedValue, ObisId(0, 1, 24, 2, 1), TimestampedFixedField, units::m3, units::dm3);
+DEFINE_FIELD(mbus1_delivered, TimestampedFixedValue, ObisId(0, 1, 24, 2, 1), TimestampedFixedField, units::m3, units::dm3);
 // OBIS: Last value of ‘not temperature corrected’ volume, including decimal values and capture time
 DEFINE_FIELD(mbus1_delivered_ntc, TimestampedFixedValue, ObisId(0, 1, 24, 2, 3), TimestampedFixedField, units::m3, units::dm3);
 /* Last hourly value (temperature compensated or not, depending on the display
@@ -399,7 +399,7 @@ DEFINE_FIELD(mbus2_equipment_id_ntc,  String, ObisId(0, 2, 96, 1, 1), StringFiel
 DEFINE_FIELD(mbus2_valve_position, uint8_t, ObisId(0, 2, 24, 4, 0), IntField, units::none);
 /* Last 5-minute Meter reading and capture time
  * (Note: 4.x spec has "hourly meter reading") */
-DEFINE_FIELD(mbus2_delivered_tc, TimestampedFixedValue, ObisId(0, 2, 24, 2, 1), TimestampedFixedField, units::GJ, units::MJ);
+DEFINE_FIELD(mbus2_delivered, TimestampedFixedValue, ObisId(0, 2, 24, 2, 1), TimestampedFixedField, units::GJ, units::MJ);
 // OBIS: Last value of ‘not temperature corrected’ volume, including decimal values and capture time
 DEFINE_FIELD(mbus2_delivered_ntc, TimestampedFixedValue, ObisId(0, 2, 24, 2, 3), TimestampedFixedField, units::m3, units::dm3);
 /* Last hourly value (temperature compensated or not, depending on the display
@@ -418,7 +418,7 @@ DEFINE_FIELD(mbus3_equipment_id_ntc,  String, ObisId(0, 3, 96, 1, 1), StringFiel
 DEFINE_FIELD(mbus3_valve_position, uint8_t, ObisId(0, 3, 24, 4, 0), IntField, units::none);
 /* Last 5-minute Meter reading and capture time
  * (Note: 4.x spec has "hourly meter reading") */
-DEFINE_FIELD(mbus3_delivered_tc, TimestampedFixedValue, ObisId(0, 3, 24, 2, 1), TimestampedFixedField, units::m3, units::dm3);
+DEFINE_FIELD(mbus3_delivered, TimestampedFixedValue, ObisId(0, 3, 24, 2, 1), TimestampedFixedField, units::m3, units::dm3);
 // OBIS: Last value of ‘not temperature corrected’ volume, including decimal values and capture time
 DEFINE_FIELD(mbus3_delivered_ntc, TimestampedFixedValue, ObisId(0, 3, 24, 2, 3), TimestampedFixedField, units::m3, units::dm3);
 /* Last hourly value (temperature compensated or not, depending on the display
@@ -436,7 +436,7 @@ DEFINE_FIELD(mbus4_equipment_id_ntc,  String, ObisId(0, 4, 96, 1, 1), StringFiel
 DEFINE_FIELD(mbus4_valve_position, uint8_t, ObisId(0, 4, 24, 4, 0), IntField, units::none);
 /* Last 5-minute Meter reading and capture time (e.g. mbus
  * E meter) (Note: 4.x spec has "hourly meter reading") */
-DEFINE_FIELD(mbus4_delivered_tc, TimestampedFixedValue, ObisId(0, 4, 24, 2, 1), TimestampedFixedField, units::m3, units::dm3);
+DEFINE_FIELD(mbus4_delivered, TimestampedFixedValue, ObisId(0, 4, 24, 2, 1), TimestampedFixedField, units::m3, units::dm3);
 // OBIS: Last value of ‘not temperature corrected’ volume , including decimal values and capture time
 DEFINE_FIELD(mbus4_delivered_ntc, TimestampedFixedValue, ObisId(0, 4, 24, 2, 3), TimestampedFixedField, units::m3, units::dm3);
 /* Last hourly value (temperature compensated or not, depending on the display

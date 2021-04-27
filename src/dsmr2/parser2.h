@@ -376,8 +376,10 @@ struct P1Parser {
    * checksum. Does not verify the checksum.
    */
   template <typename... Ts>
-  static ParseResult<void> parse_data(ParsedData<Ts...> *data, const char *str, const char *end, bool unknown_error = false) {
+  //--static ParseResult<void> parse_data(ParsedData<Ts...> *data, const char *str, const char *end, bool unknown_error = false) {
+  static ParseResult<void> parse_data(ParsedData<Ts...> *data, const char *str, const char *end, bool checksum = false) {
     ParseResult<void> res;
+    bool unknown_error = false;
     // Split into lines and parse those
     const char *line_end = str, *line_start = str;
 

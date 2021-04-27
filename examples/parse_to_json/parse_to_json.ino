@@ -286,6 +286,7 @@ void makeJson()
 } // makeJson()
 
 
+//---------------------------------------------------------------------------
 void setup() 
 {
   Serial.begin(115200);
@@ -314,9 +315,10 @@ void setup()
   ParseResult<void> res;
   //--- read first telegram ---
   Serial.println("\r\n====================================================");
-  Serial.println("Start parsing telegram 1 (stop parsing at error)");
+  Serial.println("Start parsing telegram 1 ");
   DSMRdata = {};
-  res = P1Parser::parse(&DSMRdata, msg1, lengthof(msg1), true, true);
+  //--------------------------------- do check CheckSum! vvvv
+  res = P1Parser::parse(&DSMRdata, msg1, lengthof(msg1), true);
   if (res.err) 
   {
     // Parsing error, show it
@@ -335,10 +337,10 @@ void setup()
 
   //--- read second telegram ---
   Serial.println("\r\n====================================================");
-  Serial.println("Start parsing telegram 2 (continue parsing after error)");
+  Serial.println("Start parsing telegram 2");
   DSMRdata = {};
-  //-------------------- continue parsing after an error vv     vv-- do check CheckSum!
-  res = P1Parser::parse(&DSMRdata, msg2, lengthof(msg2), false, true);
+  //--------------------------------- do check CheckSum! vvvv
+  res = P1Parser::parse(&DSMRdata, msg2, lengthof(msg2), true);
   if (res.err) 
   {
     // Parsing error, show it
@@ -353,10 +355,33 @@ void setup()
 
   //--- read third telegram ---
   Serial.println("\r\n====================================================");
-  Serial.println("Start parsing telegram 3 (don't stop after error and don't check CheckSum)");
+  Serial.println("Start parsing telegram 3 (do NOT check CheckSum)");
   DSMRdata = {};
-  //-------------------- continue parsing after an error vv     vv-- don't check CheckSum!
-  res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3), false, false); 
+  //----------------------------- do NOT check CheckSum! vvvvv
+  res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3), false); 
+  if (res.err) 
+  {
+    // Parsing error, show it
+    Serial.println(res.fullError(msg3, msg3 + lengthof(msg3)));
+  } 
+  else if (!DSMRdata.all_present()) 
+  {
+    Serial.println("DSMR: Some fields are missing");
+    Serial.println("\r\nAs with this \"dsmr2Lib\" library we check for the \"mbusx_delivered_\"");
+    Serial.println("\"Temperature Corrected (tc)\", \"Not Temperature Corrected (ntc)\" and ");
+    Serial.println("\"double lines (dbl)\" fields."); 
+    Serial.println("Normaly only one or the other is in a telegram.");
+    Serial.println("So, the object \"all_present()\" will always return false!");
+  } 
+  // Succesfully parsed, make JSON:
+  makeJson();
+
+  //--- read third telegram ---
+  Serial.println("\r\n====================================================");
+  Serial.println("Start parsing telegram 3 (do check CheckSum)");
+  DSMRdata = {};
+  //--------------------------------- do check CheckSum! vvvv
+  res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3), true); 
   if (res.err) 
   {
     // Parsing error, show it
@@ -379,6 +404,7 @@ void setup()
 } // setup()
 
 
+//---------------------------------------------------------------------------
 void loop () {
 #if defined(READSLIMMEMETER)
   slimmeMeter.loop();
