@@ -60,25 +60,25 @@ using MyData = ParsedData<
   /* String */ mbus1_equipment_id_tc,
   /* String */ mbus1_equipment_id_ntc,
   /* uint8_t */ mbus1_valve_position,
-  /* TimestampedFixedValue */ mbus1_delivered_tc,
+  /* TimestampedFixedValue */ mbus1_delivered,
   /* TimestampedFixedValue */ mbus1_delivered_ntc,
   /* uint16_t */ mbus2_device_type,
   /* String */ mbus2_equipment_id_tc,
   /* String */ mbus2_equipment_id_ntc,
   /* uint8_t */ mbus2_valve_position,
-  /* TimestampedFixedValue */ mbus2_delivered_tc,
+  /* TimestampedFixedValue */ mbus2_delivered,
   /* TimestampedFixedValue */ mbus2_delivered_ntc,
   /* uint16_t */ mbus3_device_type,
   /* String */ mbus3_equipment_id_tc,
   /* String */ mbus3_equipment_id_ntc,
   /* uint8_t */ mbus3_valve_position,
-  /* TimestampedFixedValue */ mbus3_delivered_tc,
+  /* TimestampedFixedValue */ mbus3_delivered,
   /* TimestampedFixedValue */ mbus3_delivered_ntc,
   /* uint16_t */ mbus4_device_type,
   /* String */ mbus4_equipment_id_tc,
   /* String */ mbus4_equipment_id_ntc,
   /* uint8_t */ mbus4_valve_position,
-  /* TimestampedFixedValue */ mbus4_delivered_tc,
+  /* TimestampedFixedValue */ mbus4_delivered,
   /* TimestampedFixedValue */ mbus4_delivered_ntc
 >;
 
@@ -138,6 +138,7 @@ void setup() {
   #endif
 
   // start a read right away
+  reader.doChecksum(true);  //<-- or false if you don't want to check
   reader.enable(true);
   last = millis();
 }

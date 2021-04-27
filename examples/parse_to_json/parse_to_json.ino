@@ -57,7 +57,7 @@ const char msg1[] =
   "1-0:62.7.0(00.486*kW)\r\n"                           // power_returned_l3
   "0-1:24.1.0(003)\r\n"                                 // mbus1_device_type
   "0-1:96.1.0(4730303339303031363532303530323136)\r\n"  // mbus1_equipment_id_tc
-  "0-1:24.2.1(200408063501S)(00169.156*m3)\r\n"         // mbus1_delivered_tc
+  "0-1:24.2.1(200408063501S)(00169.156*m3)\r\n"         // mbus1_delivered
   "!0876\r\n";
 
 //---  Sagemcom XS210 ESMR5 (1Fase)
@@ -89,7 +89,7 @@ const char msg2[] =
   "1-0:22.7.0(00.000*kW)\r\n"                           // power_returned_l1
   "0-1:24.1.0(003)\r\n"                                 // mbus1_device_type
   "0-1:96.1.0(4730303533303987654321373431393137)\r\n"  // mbus1_equipment_id_tc
-  "0-1:24.2.1(632525252525S)(00000.000)\r\n"            // mbus1_delivered_tc <-- error (no unit)
+  "0-1:24.2.1(632525252525S)(00000.000)\r\n"            // mbus1_delivered <-- error (no unit)
   "!DE4A\r\n";
 
 //--- Sagemcom Fluvius ? --(Belgie)
@@ -181,28 +181,28 @@ using MyData = ParsedData<
   /* String */                ,mbus1_equipment_id_tc
   /* String */                ,mbus1_equipment_id_ntc
   /* uint8_t */               ,mbus1_valve_position
-  /* TimestampedFixedValue */ ,mbus1_delivered_tc
+  /* TimestampedFixedValue */ ,mbus1_delivered
   /* TimestampedFixedValue */ ,mbus1_delivered_ntc
   /* TimestampedFixedValue */ ,mbus1_delivered_dbl
   /* uint16_t */              ,mbus2_device_type
   /* String */                ,mbus2_equipment_id_tc
   /* String */                ,mbus2_equipment_id_ntc
   /* uint8_t */               ,mbus2_valve_position
-  /* TimestampedFixedValue */ ,mbus2_delivered_tc
+  /* TimestampedFixedValue */ ,mbus2_delivered
   /* TimestampedFixedValue */ ,mbus2_delivered_ntc
   /* TimestampedFixedValue */ ,mbus2_delivered_dbl
   /* uint16_t */              ,mbus3_device_type
   /* String */                ,mbus3_equipment_id_tc
   /* String */                ,mbus3_equipment_id_ntc
   /* uint8_t */               ,mbus3_valve_position
-  /* TimestampedFixedValue */ ,mbus3_delivered_tc
+  /* TimestampedFixedValue */ ,mbus3_delivered
   /* TimestampedFixedValue */ ,mbus3_delivered_ntc
   /* TimestampedFixedValue */ ,mbus3_delivered_dbl
   /* uint16_t */              ,mbus4_device_type
   /* String */                ,mbus4_equipment_id_tc
   /* String */                ,mbus4_equipment_id_ntc
   /* uint8_t */               ,mbus4_valve_position
-  /* TimestampedFixedValue */ ,mbus4_delivered_tc
+  /* TimestampedFixedValue */ ,mbus4_delivered
   /* TimestampedFixedValue */ ,mbus4_delivered_ntc
   /* TimestampedFixedValue */ ,mbus4_delivered_dbl
 >;
@@ -317,8 +317,9 @@ void setup()
   Serial.println("\r\n====================================================");
   Serial.println("Start parsing telegram 1 ");
   DSMRdata = {};
-  //--------------------------------- do check CheckSum! vvvv
-  res = P1Parser::parse(&DSMRdata, msg1, lengthof(msg1), true);
+  //---------------------------------------- do check CheckSum! ++++
+  //-------------------------------------- unknown_error vvvvv  vvvv 
+  res = P1Parser::parse(&DSMRdata, msg1, lengthof(msg1), false, true);
   if (res.err) 
   {
     // Parsing error, show it
@@ -339,7 +340,9 @@ void setup()
   Serial.println("\r\n====================================================");
   Serial.println("Start parsing telegram 2");
   DSMRdata = {};
-  //--------------------------------- do check CheckSum! vvvv
+  //---------------------------------------- do check CheckSum! ++++
+  //-------------------------------------- unknown_error vvvvv  vvvv 
+  res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3), false, true); 
   res = P1Parser::parse(&DSMRdata, msg2, lengthof(msg2), true);
   if (res.err) 
   {
@@ -355,10 +358,11 @@ void setup()
 
   //--- read third telegram ---
   Serial.println("\r\n====================================================");
-  Serial.println("Start parsing telegram 3 (do NOT check CheckSum)");
+  Serial.println("Start parsing telegram 3 (do check CheckSum)");
   DSMRdata = {};
-  //----------------------------- do NOT check CheckSum! vvvvv
-  res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3), false); 
+  //---------------------------------------- do check CheckSum! ++++
+  //-------------------------------------- unknown_error vvvvv  vvvv 
+  res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3), false, true); 
   if (res.err) 
   {
     // Parsing error, show it
@@ -378,10 +382,11 @@ void setup()
 
   //--- read third telegram ---
   Serial.println("\r\n====================================================");
-  Serial.println("Start parsing telegram 3 (do check CheckSum)");
+  Serial.println("Start parsing telegram 3 (do not check CheckSum)");
   DSMRdata = {};
-  //--------------------------------- do check CheckSum! vvvv
-  res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3), true); 
+  //------------------------------------ do NOT check CheckSum! +++++
+  //-------------------------------------- unknown_error vvvvv  vvvvv
+  res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3), false, false); 
   if (res.err) 
   {
     // Parsing error, show it
@@ -408,6 +413,7 @@ void setup()
 void loop () {
 #if defined(READSLIMMEMETER)
   slimmeMeter.loop();
+  slimmeMeter.doChecksum(true); // <-- or false if you don't want to check
   slimmeMeter.enable(true);
   if (millis() - readTimer > 10000)
   {

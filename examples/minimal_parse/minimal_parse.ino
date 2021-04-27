@@ -32,6 +32,7 @@ using MyData = ParsedData<
 void setup() {
   Serial.begin(115200);
   delay(250);
+  Serial.println("\r\n\r\nAnd then it begins ...\r\n");
   
   MyData data;
   ParseResult<void> res = P1Parser::parse(&data, msg, lengthof(msg));
@@ -42,7 +43,9 @@ void setup() {
     Serial.println("Some fields are missing");
   } else {
     // Succesfully parsed, print results:
+    Serial.print("identification   : ");
     Serial.println(data.identification);
+    Serial.print("power delivered  : ");
     Serial.print(data.power_delivered.int_val());
     Serial.println("W");
   }
