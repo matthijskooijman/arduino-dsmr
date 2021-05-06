@@ -191,7 +191,7 @@ void setup() {
   Serial.print(rawcrc);
   Serial.println("----------------------------------------------------");
   MyData data;
-  ParseResult<void> res1 = P1Parser::parse(&data, rawcrc, lengthof(rawcrc), true, true);
+  ParseResult<void> res1 = P1Parser::parse(&data, rawcrc, lengthof(rawcrc), false, true);
   if (res1.err) {
     // Parsing error, show it
     Serial.println("P1Parser: Error found!");
@@ -206,7 +206,7 @@ void setup() {
   Serial.print(rawnocrc);
   Serial.println("----------------------------------------------------");
   data = {};
-  ParseResult<void> res2 = P1Parser::parse(&data, rawnocrc, lengthof(rawnocrc), true, true);
+  ParseResult<void> res2 = P1Parser::parse(&data, rawnocrc, lengthof(rawnocrc), false, true);
   if (res2.err) {
     // Parsing error, show it
     Serial.println("P1Parser: Error found!");
@@ -221,7 +221,7 @@ void setup() {
   Serial.print(rawnocrc);
   Serial.println("----------------------------------------------------");
   data = {};
-  ParseResult<void> res3 = P1Parser::parse(&data, rawnocrc, lengthof(rawnocrc), true, false);
+  ParseResult<void> res3 = P1Parser::parse(&data, rawnocrc, lengthof(rawnocrc), false, false);
   if (res3.err) {
     // Parsing error, show it
     Serial.println("P1Parser: Error found!");

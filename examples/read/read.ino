@@ -137,6 +137,8 @@ void setup() {
   digitalWrite(VCC_ENABLE, HIGH);
   #endif
 
+  reader.doChecksum(true); // or false = no checking of the checksum
+
   // start a read right away
   reader.doChecksum(true);  //<-- or false if you don't want to check
   reader.enable(true);

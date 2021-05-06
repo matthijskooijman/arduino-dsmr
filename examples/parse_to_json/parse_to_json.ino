@@ -56,7 +56,7 @@ const char msg1[] =
   "1-0:42.7.0(00.611*kW)\r\n"                           // power_returned_l2
   "1-0:62.7.0(00.486*kW)\r\n"                           // power_returned_l3
   "0-1:24.1.0(003)\r\n"                                 // mbus1_device_type
-  "0-1:96.1.0(4730303339303031363532303530323136)\r\n"  // mbus1_equipment_id_tc
+  "0-1:96.1.0(4730303339303031363532303530323136)\r\n"  // mbus1_equipment_id
   "0-1:24.2.1(200408063501S)(00169.156*m3)\r\n"         // mbus1_delivered
   "!0876\r\n";
 
@@ -230,7 +230,7 @@ struct buildJson
     template<typename Item>
     void apply(Item &i) 
     {
-      String Name = Item::name;
+      String Name = String(Item::name);
 
       if (i.present()) 
       {
@@ -295,6 +295,7 @@ void setup()
   
   Serial.println("\n\nAnd now it begins ...\n");
 
+#if defined(ESP8266)
   Serial.println(ESP.getResetReason());
   if (   ESP.getResetReason() == "Exception" 
       || ESP.getResetReason() == "Software Watchdog"
@@ -307,6 +308,7 @@ void setup()
       digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
     }
   }
+#endif
 
 
 #if defined(READSLIMMEMETER)
@@ -317,8 +319,7 @@ void setup()
   Serial.println("\r\n====================================================");
   Serial.println("Start parsing telegram 1 ");
   DSMRdata = {};
-  //---------------------------------------- do check CheckSum! ++++
-  //-------------------------------------- unknown_error vvvvv  vvvv 
+  //---------------------------------------- do check CheckSum! vvvv
   res = P1Parser::parse(&DSMRdata, msg1, lengthof(msg1), false, true);
   if (res.err) 
   {
@@ -340,10 +341,8 @@ void setup()
   Serial.println("\r\n====================================================");
   Serial.println("Start parsing telegram 2");
   DSMRdata = {};
-  //---------------------------------------- do check CheckSum! ++++
-  //-------------------------------------- unknown_error vvvvv  vvvv 
-  res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3), false, true); 
-  res = P1Parser::parse(&DSMRdata, msg2, lengthof(msg2), true);
+  //---------------------------------------- do check CheckSum! vvvv
+  res = P1Parser::parse(&DSMRdata, msg2, lengthof(msg2), false, true);
   if (res.err) 
   {
     // Parsing error, show it
@@ -358,11 +357,10 @@ void setup()
 
   //--- read third telegram ---
   Serial.println("\r\n====================================================");
-  Serial.println("Start parsing telegram 3 (do check CheckSum)");
+  Serial.println("Start parsing telegram 3 (do NOT check CheckSum)");
   DSMRdata = {};
-  //---------------------------------------- do check CheckSum! ++++
-  //-------------------------------------- unknown_error vvvvv  vvvv 
-  res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3), false, true); 
+  //------------------------------------ do NOT check CheckSum! vvvvv
+  res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3), false, false); 
   if (res.err) 
   {
     // Parsing error, show it
@@ -382,11 +380,10 @@ void setup()
 
   //--- read third telegram ---
   Serial.println("\r\n====================================================");
-  Serial.println("Start parsing telegram 3 (do not check CheckSum)");
+  Serial.println("Start parsing telegram 3 (do check CheckSum)");
   DSMRdata = {};
-  //------------------------------------ do NOT check CheckSum! +++++
-  //-------------------------------------- unknown_error vvvvv  vvvvv
-  res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3), false, false); 
+  //---------------------------------------- do check CheckSum! vvvv
+  res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3), false, true); 
   if (res.err) 
   {
     // Parsing error, show it
@@ -413,7 +410,6 @@ void setup()
 void loop () {
 #if defined(READSLIMMEMETER)
   slimmeMeter.loop();
-  slimmeMeter.doChecksum(true); // <-- or false if you don't want to check
   slimmeMeter.enable(true);
   if (millis() - readTimer > 10000)
   {

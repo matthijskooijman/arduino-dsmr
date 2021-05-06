@@ -254,13 +254,32 @@ struct units {
   static constexpr char MJ[] = "MJ";
 };
 
+/*
+  added as of https://github.com/matthijskooijman/arduino-dsmr/issues/36
+*/
+template <typename FieldT>
+struct NameConverter {
+  public:
+    operator const __FlashStringHelper*() const { return reinterpret_cast<const __FlashStringHelper*>(&FieldT::name_progmem); }
+};
+
+/*
+  changed as of https://github.com/matthijskooijman/arduino-dsmr/issues/36
+  
+  changed:
+    static constexpr const __FlashStringHelper *name = reinterpret_cast<const __FlashStringHelper*>(&name_progmem); \
+  to:
+    static constexpr NameConverter<dsmr::fields::fieldname> name = {}; \
+    
+*/
+
 #define DEFINE_FIELD(fieldname, value_t, obis, field_t, field_args...) \
   struct fieldname : field_t<fieldname, ##field_args> { \
     value_t fieldname; \
     bool fieldname ## _present = false; \
     static constexpr ObisId id = obis; \
     static constexpr char name_progmem[] DSMR_PROGMEM = #fieldname; \
-    static constexpr const __FlashStringHelper *name = reinterpret_cast<const __FlashStringHelper*>(&name_progmem); \
+    static constexpr NameConverter<dsmr::fields::fieldname> name = {}; \
     value_t& val() { return fieldname; } \
     bool& present() { return fieldname ## _present; } \
   }
