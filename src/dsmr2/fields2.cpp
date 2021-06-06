@@ -68,7 +68,7 @@ constexpr char units::GJ[];
 constexpr char units::MJ[];
 
 /*
-  removed every 3e lines as of https://github.com/matthijskooijman/arduino-dsmr/issues/36
+  removed 3e lines as of https://github.com/matthijskooijman/arduino-dsmr/issues/36
 */
 
 constexpr ObisId identification::id;

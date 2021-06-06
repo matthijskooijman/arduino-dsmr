@@ -271,6 +271,7 @@ struct NameConverter {
   to:
     static constexpr NameConverter<dsmr::fields::fieldname> name = {}; \
     
+  as by commit "29b1d33fb4397a779b9647f8a3e29ecf9dee116e"
 */
 
 #define DEFINE_FIELD(fieldname, value_t, obis, field_t, field_args...) \

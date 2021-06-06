@@ -19,67 +19,71 @@
  * Each template argument below results in a field of the same name.
  */
 using MyData = ParsedData<
-  /* String */ identification,
-  /* String */ p1_version,
-  /* String */ p1_version_be,
-  /* String */ timestamp,
-  /* String */ equipment_id,
-  /* FixedValue */ energy_delivered_tariff1,
-  /* FixedValue */ energy_delivered_tariff2,
-  /* FixedValue */ energy_returned_tariff1,
-  /* FixedValue */ energy_returned_tariff2,
-  /* String */ electricity_tariff,
-  /* FixedValue */ power_delivered,
-  /* FixedValue */ power_returned,
-  /* FixedValue */ electricity_threshold,
-  /* uint8_t */ electricity_switch_position,
-  /* uint32_t */ electricity_failures,
-  /* uint32_t */ electricity_long_failures,
-  /* String */ electricity_failure_log,
-  /* uint32_t */ electricity_sags_l1,
-  /* uint32_t */ electricity_sags_l2,
-  /* uint32_t */ electricity_sags_l3,
-  /* uint32_t */ electricity_swells_l1,
-  /* uint32_t */ electricity_swells_l2,
-  /* uint32_t */ electricity_swells_l3,
-  /* String */ message_short,
-  /* String */ message_long,
-  /* FixedValue */ voltage_l1,
-  /* FixedValue */ voltage_l2,
-  /* FixedValue */ voltage_l3,
-  /* FixedValue */ current_l1,
-  /* FixedValue */ current_l2,
-  /* FixedValue */ current_l3,
-  /* FixedValue */ power_delivered_l1,
-  /* FixedValue */ power_delivered_l2,
-  /* FixedValue */ power_delivered_l3,
-  /* FixedValue */ power_returned_l1,
-  /* FixedValue */ power_returned_l2,
-  /* FixedValue */ power_returned_l3,
-  /* uint16_t */ mbus1_device_type,
-  /* String */ mbus1_equipment_id_tc,
-  /* String */ mbus1_equipment_id_ntc,
-  /* uint8_t */ mbus1_valve_position,
-  /* TimestampedFixedValue */ mbus1_delivered,
-  /* TimestampedFixedValue */ mbus1_delivered_ntc,
-  /* uint16_t */ mbus2_device_type,
-  /* String */ mbus2_equipment_id_tc,
-  /* String */ mbus2_equipment_id_ntc,
-  /* uint8_t */ mbus2_valve_position,
-  /* TimestampedFixedValue */ mbus2_delivered,
-  /* TimestampedFixedValue */ mbus2_delivered_ntc,
-  /* uint16_t */ mbus3_device_type,
-  /* String */ mbus3_equipment_id_tc,
-  /* String */ mbus3_equipment_id_ntc,
-  /* uint8_t */ mbus3_valve_position,
-  /* TimestampedFixedValue */ mbus3_delivered,
-  /* TimestampedFixedValue */ mbus3_delivered_ntc,
-  /* uint16_t */ mbus4_device_type,
-  /* String */ mbus4_equipment_id_tc,
-  /* String */ mbus4_equipment_id_ntc,
-  /* uint8_t */ mbus4_valve_position,
-  /* TimestampedFixedValue */ mbus4_delivered,
-  /* TimestampedFixedValue */ mbus4_delivered_ntc
+  /* String */                 identification
+  /* String */                ,p1_version
+  /* String */                ,p1_version_be
+  /* String */                ,timestamp
+  /* String */                ,equipment_id
+  /* FixedValue */            ,energy_delivered_tariff1
+  /* FixedValue */            ,energy_delivered_tariff2
+  /* FixedValue */            ,energy_returned_tariff1
+  /* FixedValue */            ,energy_returned_tariff2
+  /* String */                ,electricity_tariff
+  /* FixedValue */            ,power_delivered
+  /* FixedValue */            ,power_returned
+  /* FixedValue */            ,electricity_threshold
+  /* uint8_t */               ,electricity_switch_position
+  /* uint32_t */              ,electricity_failures
+  /* uint32_t */              ,electricity_long_failures
+  /* String */                ,electricity_failure_log
+  /* uint32_t */              ,electricity_sags_l1
+  /* uint32_t */              ,electricity_sags_l2
+  /* uint32_t */              ,electricity_sags_l3
+  /* uint32_t */              ,electricity_swells_l1
+  /* uint32_t */              ,electricity_swells_l2
+  /* uint32_t */              ,electricity_swells_l3
+  /* String */                ,message_short
+  /* String */                ,message_long
+  /* FixedValue */            ,voltage_l1
+  /* FixedValue */            ,voltage_l2
+  /* FixedValue */            ,voltage_l3
+  /* FixedValue */            ,current_l1
+  /* FixedValue */            ,current_l2
+  /* FixedValue */            ,current_l3
+  /* FixedValue */            ,power_delivered_l1
+  /* FixedValue */            ,power_delivered_l2
+  /* FixedValue */            ,power_delivered_l3
+  /* FixedValue */            ,power_returned_l1
+  /* FixedValue */            ,power_returned_l2
+  /* FixedValue */            ,power_returned_l3
+  /* uint16_t */              ,mbus1_device_type
+  /* String */                ,mbus1_equipment_id_tc
+  /* String */                ,mbus1_equipment_id_ntc
+  /* uint8_t */               ,mbus1_valve_position
+  /* TimestampedFixedValue */ ,mbus1_delivered
+  /* TimestampedFixedValue */ ,mbus1_delivered_ntc
+  /* TimestampedFixedValue */ ,mbus1_delivered_dbl
+  /* uint16_t */              ,mbus2_device_type
+  /* String */                ,mbus2_equipment_id_tc
+  /* String */                ,mbus2_equipment_id_ntc
+  /* uint8_t */               ,mbus2_valve_position
+  /* TimestampedFixedValue */ ,mbus2_delivered
+  /* TimestampedFixedValue */ ,mbus2_delivered_ntc
+  /* TimestampedFixedValue */ ,mbus2_delivered_dbl
+  /* uint16_t */              ,mbus3_device_type
+  /* String */                ,mbus3_equipment_id_tc
+  /* String */                ,mbus3_equipment_id_ntc
+  /* uint8_t */               ,mbus3_valve_position
+  /* TimestampedFixedValue */ ,mbus3_delivered
+  /* TimestampedFixedValue */ ,mbus3_delivered_ntc
+  /* TimestampedFixedValue */ ,mbus3_delivered_dbl
+  /* uint16_t */              ,mbus4_device_type
+  /* String */                ,mbus4_equipment_id_tc
+  /* String */                ,mbus4_equipment_id_ntc
+  /* uint8_t */               ,mbus4_valve_position
+  /* TimestampedFixedValue */ ,mbus4_delivered
+  /* TimestampedFixedValue */ ,mbus4_delivered_ntc
+  /* TimestampedFixedValue */ ,mbus4_delivered_dbl
 >;
 
 /**
@@ -137,10 +141,7 @@ void setup() {
   digitalWrite(VCC_ENABLE, HIGH);
   #endif
 
-  reader.doChecksum(true); // or false = no checking of the checksum
-
   // start a read right away
-  reader.doChecksum(true);  //<-- or false if you don't want to check
   reader.enable(true);
   last = millis();
 }

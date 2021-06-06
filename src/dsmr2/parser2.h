@@ -192,6 +192,7 @@ struct NumParser {
 
     // Parse integer part
     while(num_end < end && !strchr("*.)", *num_end)) {
+      delay(0); //  yield()
       if (*num_end < '0' || *num_end > '9')
         return res.fail((const __FlashStringHelper*)INVALID_NUMBER, num_end);
       value *= 10;
@@ -204,6 +205,7 @@ struct NumParser {
       ++num_end;
 
       while(num_end < end && !strchr("*)", *num_end) && max_decimals--) {
+        delay(0); //  yield()
         if (*num_end < '0' || *num_end > '9')
           return res.fail((const __FlashStringHelper*)INVALID_NUMBER, num_end);
         value *= 10;
@@ -221,6 +223,7 @@ struct NumParser {
         return res.fail(F("Missing unit"), num_end);
       const char *unit_start = ++num_end; // skip *
       while(num_end < end && *num_end != ')' && *unit) {
+        delay(0); //  yield()
         if (*num_end++ != *unit++)
         {
           //--AaW accept all unit's 
@@ -255,6 +258,7 @@ struct ObisIdParser {
     while (res.next < end) {
       char c = *res.next;
 
+      delay(0); //  yield()
       if (c >= '0' && c <= '9') {
         uint8_t digit = c - '0';
         if (id.v[part] > 25 || (id.v[part] == 25 && digit > 5))
@@ -334,6 +338,7 @@ struct P1Parser {
 
       uint16_t crc = _crc16_update(0, *str); // Include the / in CRC
       while (data_end < str + n && *data_end != '!') {
+        delay(0); //  yield()
         crc = _crc16_update(crc, *data_end);
         ++data_end;
       }
@@ -354,12 +359,14 @@ struct P1Parser {
     } else {
       // There's no CRC check, still need to know where the message ends (!)
       while (data_end < str + n && *data_end != '!') {
+        delay(0); //  yield()
         ++data_end;
       }
 
       // Skip to end-of-line, everything afther that is not yet processed.
       next = data_end;
       while (next < str + n && *next != '\r' && *next != '\n') {
+        delay(0); //  yield()
         ++next;
       }
     }
@@ -385,6 +392,7 @@ struct P1Parser {
 
     // Parse ID line
     while (line_end < end) {
+      delay(0); //  yield()
       if (*line_end == '\r' || *line_end == '\n') {
         // The first identification line looks like:
         // XXX5<id string>
@@ -411,6 +419,7 @@ struct P1Parser {
 
     // Parse data lines
     while (line_end < end) {
+      delay(0); //  yield()
       // When a line is skipped line_start > line_end.
       // i.e. line_start is already at the next line, line_end is still behind,
       // continue iterating over line_end until the next line is found.

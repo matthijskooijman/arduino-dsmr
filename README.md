@@ -17,23 +17,15 @@ The assumtion of the original library by Matthijs Kooijman is that the GAS meter
 is always connected to MBUS_ID 1 .. which is not the case. If a GAS meter is
 replaced it can/will be connected to the first free MBUS_ID and that could be 
 anything..
-That has some implications for parsing, for instance, the "unit's". The "unit" 
+That has some implications for parsing, for instance, the unit's. The unit 
 should be parsed and used but should not raise an error as we don't know what
 meter is connected and what unit's it will use. So I removed the units check
 but it would be better to have some kind of "wild card" unit.
 
 There are two type of GAS meters: "Temperature Compensated" and
-"Not Temperature Compensated" meters. And than there are Slimme Meters that 
-spread the gas-meter value over two lines.
-My assumption is that de device_type of a GAS meter is always "3" as seems
-to be confirmed by 
-<a href="https://github.com/mrWheel/dsmr2Lib/blob/master/specs/OMS-Spec_Vol2_Primary_v402.pdf">tabel 2, page 13</a>;
-
-With some external coding you can use this library for pré DSMR 4 versions,
-DSMR 40+ versions and Belgium Slimme Meters.
-
-There is a method "doChecksum(true|false)" that you can call to enable or disable
-checksum checks (mostly used for pré DSMR 4 versions).
+"Not Temperature Compensated" meters. 
+My assumption is that de device_type of a GAS meter is always "3". If that
+is not the case: all bets are off.
 
 Do not try to use this library for something usefull with an Arduino UNO
 (atmega328) as it will not work but .. it will not raise an error so your

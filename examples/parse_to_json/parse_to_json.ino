@@ -56,8 +56,8 @@ const char msg1[] =
   "1-0:42.7.0(00.611*kW)\r\n"                           // power_returned_l2
   "1-0:62.7.0(00.486*kW)\r\n"                           // power_returned_l3
   "0-1:24.1.0(003)\r\n"                                 // mbus1_device_type
-  "0-1:96.1.0(4730303339303031363532303530323136)\r\n"  // mbus1_equipment_id
-  "0-1:24.2.1(200408063501S)(00169.156*m3)\r\n"         // mbus1_delivered
+  "0-1:96.1.0(4730303339303031363532303530323136)\r\n"  // mbus1_equipment_id_tc
+  "0-1:24.2.1(200408063501S)(00169.156*m3)\r\n"         // mbus1_delivered_tc
   "!0876\r\n";
 
 //---  Sagemcom XS210 ESMR5 (1Fase)
@@ -89,7 +89,7 @@ const char msg2[] =
   "1-0:22.7.0(00.000*kW)\r\n"                           // power_returned_l1
   "0-1:24.1.0(003)\r\n"                                 // mbus1_device_type
   "0-1:96.1.0(4730303533303987654321373431393137)\r\n"  // mbus1_equipment_id_tc
-  "0-1:24.2.1(632525252525S)(00000.000)\r\n"            // mbus1_delivered <-- error (no unit)
+  "0-1:24.2.1(632525252525S)(00000.000)\r\n"            // mbus1_delivered_tc <-- error (no unit)
   "!DE4A\r\n";
 
 //--- Sagemcom Fluvius ? --(Belgie)
@@ -236,7 +236,7 @@ struct buildJson
       {
         JsonObject nested = root.createNestedObject();
         nested["name"]  = Name;
-        String Unit = Item::unit();
+        String Unit = String(Item::unit());
         nested["value"] = value_to_json(i.val());
         
         if (Unit.length() > 0)
@@ -295,7 +295,6 @@ void setup()
   
   Serial.println("\n\nAnd now it begins ...\n");
 
-#if defined(ESP8266)
   Serial.println(ESP.getResetReason());
   if (   ESP.getResetReason() == "Exception" 
       || ESP.getResetReason() == "Software Watchdog"
@@ -308,7 +307,6 @@ void setup()
       digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
     }
   }
-#endif
 
 
 #if defined(READSLIMMEMETER)
@@ -319,8 +317,8 @@ void setup()
   Serial.println("\r\n====================================================");
   Serial.println("Start parsing telegram 1 ");
   DSMRdata = {};
-  //---------------------------------------- do check CheckSum! vvvv
-  res = P1Parser::parse(&DSMRdata, msg1, lengthof(msg1), false, true);
+  //--------------------------------- do check CheckSum! vvvv
+  res = P1Parser::parse(&DSMRdata, msg1, lengthof(msg1), true);
   if (res.err) 
   {
     // Parsing error, show it
@@ -341,8 +339,8 @@ void setup()
   Serial.println("\r\n====================================================");
   Serial.println("Start parsing telegram 2");
   DSMRdata = {};
-  //---------------------------------------- do check CheckSum! vvvv
-  res = P1Parser::parse(&DSMRdata, msg2, lengthof(msg2), false, true);
+  //--------------------------------- do check CheckSum! vvvv
+  res = P1Parser::parse(&DSMRdata, msg2, lengthof(msg2), true);
   if (res.err) 
   {
     // Parsing error, show it
@@ -359,8 +357,8 @@ void setup()
   Serial.println("\r\n====================================================");
   Serial.println("Start parsing telegram 3 (do NOT check CheckSum)");
   DSMRdata = {};
-  //------------------------------------ do NOT check CheckSum! vvvvv
-  res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3), false, false); 
+  //----------------------------- do NOT check CheckSum! vvvvv
+  res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3), false); 
   if (res.err) 
   {
     // Parsing error, show it
@@ -382,8 +380,8 @@ void setup()
   Serial.println("\r\n====================================================");
   Serial.println("Start parsing telegram 3 (do check CheckSum)");
   DSMRdata = {};
-  //---------------------------------------- do check CheckSum! vvvv
-  res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3), false, true); 
+  //--------------------------------- do check CheckSum! vvvv
+  res = P1Parser::parse(&DSMRdata, msg3, lengthof(msg3), true); 
   if (res.err) 
   {
     // Parsing error, show it

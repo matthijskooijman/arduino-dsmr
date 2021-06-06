@@ -77,7 +77,7 @@ class P1Reader {
     }
 
     /**
-     * Enable the request pin, to request data on the P1 port.
+     * Enable checksum test.
      * @param  checksum    When
      *                 true: calculate and check checksum
      *                 false: there is no checksum, so skip it
@@ -139,8 +139,10 @@ class P1Reader {
           
           char buf[CrcParser::CRC_LEN];
           for (uint8_t i = 0; i < CrcParser::CRC_LEN; ++i)
+          {
+            delay(0); // yield()
             buf[i] = this->stream->read();
-
+          }
           ParseResult<uint16_t> crc = CrcParser::parse(buf, buf + lengthof(buf));
 
           // Prepare for next message
@@ -196,6 +198,7 @@ class P1Reader {
               break;
           }
         }
+        delay(0); // force yield()
       }
       return false;
     }
