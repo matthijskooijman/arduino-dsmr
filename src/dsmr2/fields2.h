@@ -5,6 +5,21 @@
  *
  * Copyright (c) 2015 Matthijs Kooijman <matthijs@stdin.nl>
  *
+ *------------------------------------------------------------------------------
+ * Changed by Willem Aandewiel
+ * In the original library it is assumed that the Mbus GAS meter is 
+ * always connected to MBUS_ID 1. But this is wrong. Mostly on
+ * an initial installation the GAS meter is at MBUS_ID 1 but if an other
+ * meter is installed it is connected to the first free MBUS_ID. 
+ * So you cannot make any assumption about what mbus is connected to
+ * which MBUS_ID. Therfore it is also not possible to check the units
+ * on the basis of the MBUS_ID. It can be anything.
+ * My assumption is that the device_type of a GAS meter is always "3"
+ * and that of, f.i. a water meter is always "5".
+ * I hope I'm right but have not been able to verify this with the
+ * original documenation. 
+ *------------------------------------------------------------------------------
+ *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -32,7 +47,7 @@
 #define DSMR_INCLUDE_FIELDS_H
 
 #include "util.h"
-#include "parser.h"
+#include "parser2.h"
 
 namespace dsmr {
 
@@ -122,6 +137,74 @@ struct TimestampedFixedField : public FixedField<T, _unit, _int_unit> {
   }
 };
 
+// Some gas meters follow different specifications and output
+// something like this, e.g.:
+// 0-1:24.3.0(150623120000)(00)(60)(1)(0-1:24.2.1)(m3)
+// (01100.658)
+// Note that the output spans two lines
+template <typename T, const char *_unit, const char *_int_unit>
+struct DoubleLineTimestampedFixedField : public FixedField<T, _unit, _int_unit> {
+  ParseResult<void> parse(const char *str, const char *end) {
+    // First, parse timestamp
+    ParseResult<String> res = StringParser::parse_string(12, 12, str, end);
+    if (res.err)
+      return res;
+
+    static_cast<T*>(this)->val().timestamp = res.result;
+
+    // The timestamp is followed by 3 sets of numerical values, parse them
+    ParseResult<uint32_t> numres = NumParser::parse(0, NULL, res.next, end);
+    if (numres.err)
+      return numres;
+
+    numres = NumParser::parse(0, NULL, numres.next, end);
+    if (res.err)
+      return numres;
+
+    numres = NumParser::parse(0, NULL, numres.next, end);
+    if (numres.err)
+      return numres;
+
+    // Afther the numerical values, another ObisID is presented,
+    // skip the first ')'
+    ParseResult<ObisId> idres = ObisIdParser::parse(numres.next + 1, end);
+    if (idres.err)
+      return idres;
+
+    // The last item on the line is the unit, again skip the closing ')'
+    size_t unit_size = strnlen(_unit, 3);
+    ParseResult<String> unitres = StringParser::parse_string(unit_size, unit_size, idres.next + 1, end);
+    if (unitres.err)
+      return unitres;
+    
+    // Verify the unit.
+    const char *unit = unitres.result.c_str();
+    if(memcmp(unit, _unit, unit_size) != 0) {
+      return unitres.fail((const __FlashStringHelper*)INVALID_UNIT, idres.next + 1);
+    }
+
+    // Now move to the next line.
+    const char *start = unitres.next;
+    if (*start == '\r')
+      ++start;
+
+    if (*start == '\n')
+      ++start;
+
+    // Since the start line is moved, also move the end line.
+    const char *newend = start;
+    while (*newend != '\r' && *newend != '\n' && newend != end)
+      ++newend;
+
+    // Finally parse the value.
+    numres = NumParser::parse(3, NULL, start, newend);
+    if (!numres.err)
+      static_cast<T*>(this)->val()._value = numres.result;
+
+    return numres;
+  }
+};
+
 // A integer number is just represented as an integer.
 template <typename T, const char *_unit>
 struct IntField : ParsedField<T> {
@@ -171,10 +254,25 @@ struct units {
   static constexpr char MJ[] = "MJ";
 };
 
-const uint8_t GAS_MBUS_ID = 1;
-const uint8_t WATER_MBUS_ID = 2;
-const uint8_t THERMAL_MBUS_ID = 3;
-const uint8_t SLAVE_MBUS_ID = 4;
+/*
+  added as of https://github.com/matthijskooijman/arduino-dsmr/issues/36
+*/
+template <typename FieldT>
+struct NameConverter {
+  public:
+    operator const __FlashStringHelper*() const { return reinterpret_cast<const __FlashStringHelper*>(&FieldT::name_progmem); }
+};
+
+/*
+  changed as of https://github.com/matthijskooijman/arduino-dsmr/issues/36
+  
+  changed:
+    static constexpr const __FlashStringHelper *name = reinterpret_cast<const __FlashStringHelper*>(&name_progmem); \
+  to:
+    static constexpr NameConverter<dsmr::fields::fieldname> name = {}; \
+    
+  as by commit "29b1d33fb4397a779b9647f8a3e29ecf9dee116e"
+*/
 
 #define DEFINE_FIELD(fieldname, value_t, obis, field_t, field_args...) \
   struct fieldname : field_t<fieldname, ##field_args> { \
@@ -182,7 +280,7 @@ const uint8_t SLAVE_MBUS_ID = 4;
     bool fieldname ## _present = false; \
     static constexpr ObisId id = obis; \
     static constexpr char name_progmem[] DSMR_PROGMEM = #fieldname; \
-    static constexpr const __FlashStringHelper *name = reinterpret_cast<const __FlashStringHelper*>(&name_progmem); \
+    static constexpr NameConverter<dsmr::fields::fieldname> name = {}; \
     value_t& val() { return fieldname; } \
     bool& present() { return fieldname ## _present; } \
   }
@@ -193,6 +291,8 @@ DEFINE_FIELD(identification, String, ObisId(255, 255, 255, 255, 255, 255), RawFi
 
 /* Version information for P1 output */
 DEFINE_FIELD(p1_version, String, ObisId(1, 3, 0, 2, 8), StringField, 2, 2);
+/* Version information for P1 output (Belgium)*/
+DEFINE_FIELD(p1_version_be, String, ObisId(0, 0, 96, 1, 4), StringField, 0, 5);
 
 /* Date-time stamp of the P1 message */
 DEFINE_FIELD(timestamp, String, ObisId(0, 0, 1, 0, 0), TimestampField);
@@ -268,11 +368,17 @@ DEFINE_FIELD(voltage_l2, FixedValue, ObisId(1, 0, 52, 7, 0), FixedField, units::
 DEFINE_FIELD(voltage_l3, FixedValue, ObisId(1, 0, 72, 7, 0), FixedField, units::V, units::mV);
 
 /* Instantaneous current L1 in A resolution */
-DEFINE_FIELD(current_l1, uint16_t, ObisId(1, 0, 31, 7, 0), IntField, units::A);
+//DEFINE_FIELD(current_l1, uint16_t, ObisId(1, 0, 31, 7, 0), IntField, units::A);
+/* Instantaneous current L1 in mA resolution */
+DEFINE_FIELD(current_l1, FixedValue, ObisId(1, 0, 31, 7, 0), FixedField, units::A, units::mA);
 /* Instantaneous current L2 in A resolution */
-DEFINE_FIELD(current_l2, uint16_t, ObisId(1, 0, 51, 7, 0), IntField, units::A);
+//DEFINE_FIELD(current_l2, uint16_t, ObisId(1, 0, 51, 7, 0), IntField, units::A);
+/* Instantaneous current L2 in mA resolution */
+DEFINE_FIELD(current_l2, FixedValue, ObisId(1, 0, 51, 7, 0), FixedField, units::A, units::mA);
 /* Instantaneous current L3 in A resolution */
-DEFINE_FIELD(current_l3, uint16_t, ObisId(1, 0, 71, 7, 0), IntField, units::A);
+//DEFINE_FIELD(current_l3, uint16_t, ObisId(1, 0, 71, 7, 0), IntField, units::A);
+/* Instantaneous current L3 in mA resolution */
+DEFINE_FIELD(current_l3, FixedValue, ObisId(1, 0, 71, 7, 0), FixedField, units::A, units::mA);
 
 /* Instantaneous active power L1 (+P) in W resolution */
 DEFINE_FIELD(power_delivered_l1, FixedValue, ObisId(1, 0, 21, 7, 0), FixedField, units::kW, units::W);
@@ -290,60 +396,79 @@ DEFINE_FIELD(power_returned_l3, FixedValue, ObisId(1, 0, 62, 7, 0), FixedField, 
 
 
 /* Device-Type */
-DEFINE_FIELD(gas_device_type, uint16_t, ObisId(0, GAS_MBUS_ID, 24, 1, 0), IntField, units::none);
-
-/* Equipment identifier (Gas) */
-DEFINE_FIELD(gas_equipment_id, String, ObisId(0, GAS_MBUS_ID, 96, 1, 0), StringField, 0, 96);
-
-/* Valve position Gas (on/off/released) (Note: Removed in 4.0.7 / 4.2.2 / 5.0). */
-DEFINE_FIELD(gas_valve_position, uint8_t, ObisId(0, GAS_MBUS_ID, 24, 4, 0), IntField, units::none);
-
-/* Last 5-minute value (temperature converted), gas delivered to client
+DEFINE_FIELD(mbus1_device_type,   uint16_t, ObisId(0, 1, 24, 1, 0), IntField, units::none);
+/* Equipment identifier (temperature corrected) */
+DEFINE_FIELD(mbus1_equipment_id_tc,    String, ObisId(0, 1, 96, 1, 0), StringField, 0, 96);
+/* Equipment identifier (Not Temp. Corrected) */
+DEFINE_FIELD(mbus1_equipment_id_ntc,  String, ObisId(0, 1, 96, 1, 1), StringField, 0, 96);
+/* Valve position (on/off/released) (Note: Removed in 4.0.7 / 4.2.2 / 5.0). */
+DEFINE_FIELD(mbus1_valve_position, uint8_t, ObisId(0, 1, 24, 4, 0), IntField, units::none);
+/* Last 5-minute value (temperature converted), delivered to client
  * in m3, including decimal values and capture time (Note: 4.x spec has
  * "hourly value") */
-DEFINE_FIELD(gas_delivered, TimestampedFixedValue, ObisId(0, GAS_MBUS_ID, 24, 2, 1), TimestampedFixedField, units::m3, units::dm3);
+DEFINE_FIELD(mbus1_delivered, TimestampedFixedValue, ObisId(0, 1, 24, 2, 1), TimestampedFixedField, units::m3, units::dm3);
+// OBIS: Last value of ‘not temperature corrected’ volume, including decimal values and capture time
+DEFINE_FIELD(mbus1_delivered_ntc, TimestampedFixedValue, ObisId(0, 1, 24, 2, 3), TimestampedFixedField, units::m3, units::dm3);
+/* Last hourly value (temperature compensated or not, depending on the display
+ * setting of the device), volume in m3, including decimal values 
+ *  double line */
+DEFINE_FIELD(mbus1_delivered_dbl, TimestampedFixedValue, ObisId(0, 1, 24, 3, 0), DoubleLineTimestampedFixedField, units::m3, units::dm3);
 
 
 /* Device-Type */
-DEFINE_FIELD(thermal_device_type, uint16_t, ObisId(0, THERMAL_MBUS_ID, 24, 1, 0), IntField, units::none);
-
-/* Equipment identifier (Thermal: heat or cold) */
-DEFINE_FIELD(thermal_equipment_id, String, ObisId(0, THERMAL_MBUS_ID, 96, 1, 0), StringField, 0, 96);
-
+DEFINE_FIELD(mbus2_device_type, uint16_t, ObisId(0, 2, 24, 1, 0), IntField, units::none);
+/* Equipment identifier (temperature corrected) */
+DEFINE_FIELD(mbus2_equipment_id_tc, String, ObisId(0, 2, 96, 1, 0), StringField, 0, 96);
+/* Equipment identifier (Not Temp. Corrected) */
+DEFINE_FIELD(mbus2_equipment_id_ntc,  String, ObisId(0, 2, 96, 1, 1), StringField, 0, 96);
 /* Valve position (on/off/released) (Note: Removed in 4.0.7 / 4.2.2 / 5.0). */
-DEFINE_FIELD(thermal_valve_position, uint8_t, ObisId(0, THERMAL_MBUS_ID, 24, 4, 0), IntField, units::none);
-
-/* Last 5-minute Meter reading Heat or Cold in 0,01 GJ and capture time
+DEFINE_FIELD(mbus2_valve_position, uint8_t, ObisId(0, 2, 24, 4, 0), IntField, units::none);
+/* Last 5-minute Meter reading and capture time
  * (Note: 4.x spec has "hourly meter reading") */
-DEFINE_FIELD(thermal_delivered, TimestampedFixedValue, ObisId(0, THERMAL_MBUS_ID, 24, 2, 1), TimestampedFixedField, units::GJ, units::MJ);
+DEFINE_FIELD(mbus2_delivered, TimestampedFixedValue, ObisId(0, 2, 24, 2, 1), TimestampedFixedField, units::GJ, units::MJ);
+// OBIS: Last value of ‘not temperature corrected’ volume, including decimal values and capture time
+DEFINE_FIELD(mbus2_delivered_ntc, TimestampedFixedValue, ObisId(0, 2, 24, 2, 3), TimestampedFixedField, units::m3, units::dm3);
+/* Last hourly value (temperature compensated or not, depending on the display
+ * setting of the device), volume in m3, including decimal values 
+ *  double line */
+DEFINE_FIELD(mbus2_delivered_dbl, TimestampedFixedValue, ObisId(0, 2, 24, 3, 0), DoubleLineTimestampedFixedField, units::m3, units::dm3);
 
 
 /* Device-Type */
-DEFINE_FIELD(water_device_type, uint16_t, ObisId(0, WATER_MBUS_ID, 24, 1, 0), IntField, units::none);
-
-/* Equipment identifier (Thermal: heat or cold) */
-DEFINE_FIELD(water_equipment_id, String, ObisId(0, WATER_MBUS_ID, 96, 1, 0), StringField, 0, 96);
-
+DEFINE_FIELD(mbus3_device_type, uint16_t, ObisId(0, 3, 24, 1, 0), IntField, units::none);
+/* Equipment identifier  (temperature corrected) */
+DEFINE_FIELD(mbus3_equipment_id_tc, String, ObisId(0, 3, 96, 1, 0), StringField, 0, 96);
+/* Equipment identifier (Not Temp. Corrected) */
+DEFINE_FIELD(mbus3_equipment_id_ntc,  String, ObisId(0, 3, 96, 1, 1), StringField, 0, 96);
 /* Valve position (on/off/released) (Note: Removed in 4.0.7 / 4.2.2 / 5.0). */
-DEFINE_FIELD(water_valve_position, uint8_t, ObisId(0, WATER_MBUS_ID, 24, 4, 0), IntField, units::none);
-
-/* Last 5-minute Meter reading in 0,001 m3 and capture time
+DEFINE_FIELD(mbus3_valve_position, uint8_t, ObisId(0, 3, 24, 4, 0), IntField, units::none);
+/* Last 5-minute Meter reading and capture time
  * (Note: 4.x spec has "hourly meter reading") */
-DEFINE_FIELD(water_delivered, TimestampedFixedValue, ObisId(0, WATER_MBUS_ID, 24, 2, 1), TimestampedFixedField, units::m3, units::dm3);
-
+DEFINE_FIELD(mbus3_delivered, TimestampedFixedValue, ObisId(0, 3, 24, 2, 1), TimestampedFixedField, units::m3, units::dm3);
+// OBIS: Last value of ‘not temperature corrected’ volume, including decimal values and capture time
+DEFINE_FIELD(mbus3_delivered_ntc, TimestampedFixedValue, ObisId(0, 3, 24, 2, 3), TimestampedFixedField, units::m3, units::dm3);
+/* Last hourly value (temperature compensated or not, depending on the display
+ * setting of the device), volume in m3, including decimal values 
+ *  double line */
+DEFINE_FIELD(mbus3_delivered_dbl, TimestampedFixedValue, ObisId(0, 3, 24, 3, 0), DoubleLineTimestampedFixedField, units::m3, units::dm3);
 
 /* Device-Type */
-DEFINE_FIELD(slave_device_type, uint16_t, ObisId(0, SLAVE_MBUS_ID, 24, 1, 0), IntField, units::none);
-
-/* Equipment identifier (Thermal: heat or cold) */
-DEFINE_FIELD(slave_equipment_id, String, ObisId(0, SLAVE_MBUS_ID, 96, 1, 0), StringField, 0, 96);
-
+DEFINE_FIELD(mbus4_device_type, uint16_t, ObisId(0, 4, 24, 1, 0), IntField, units::none);
+/* Equipment identifier  (temperature corrected) */
+DEFINE_FIELD(mbus4_equipment_id_tc, String, ObisId(0, 4, 96, 1, 0), StringField, 0, 96);
+/* Equipment identifier (Not Temp. Corrected) */
+DEFINE_FIELD(mbus4_equipment_id_ntc,  String, ObisId(0, 4, 96, 1, 1), StringField, 0, 96);
 /* Valve position (on/off/released) (Note: Removed in 4.0.7 / 4.2.2 / 5.0). */
-DEFINE_FIELD(slave_valve_position, uint8_t, ObisId(0, SLAVE_MBUS_ID, 24, 4, 0), IntField, units::none);
-
-/* Last 5-minute Meter reading Heat or Cold and capture time (e.g. slave
+DEFINE_FIELD(mbus4_valve_position, uint8_t, ObisId(0, 4, 24, 4, 0), IntField, units::none);
+/* Last 5-minute Meter reading and capture time (e.g. mbus
  * E meter) (Note: 4.x spec has "hourly meter reading") */
-DEFINE_FIELD(slave_delivered, TimestampedFixedValue, ObisId(0, SLAVE_MBUS_ID, 24, 2, 1), TimestampedFixedField, units::m3, units::dm3);
+DEFINE_FIELD(mbus4_delivered, TimestampedFixedValue, ObisId(0, 4, 24, 2, 1), TimestampedFixedField, units::m3, units::dm3);
+// OBIS: Last value of ‘not temperature corrected’ volume , including decimal values and capture time
+DEFINE_FIELD(mbus4_delivered_ntc, TimestampedFixedValue, ObisId(0, 4, 24, 2, 3), TimestampedFixedField, units::m3, units::dm3);
+/* Last hourly value (temperature compensated or not, depending on the display
+ * setting of the device), volume in m3, including decimal values 
+ *  double line */
+DEFINE_FIELD(mbus4_delivered_dbl, TimestampedFixedValue, ObisId(0, 4, 24, 3, 0), DoubleLineTimestampedFixedField, units::m3, units::dm3);
 
 } // namespace fields
 

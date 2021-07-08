@@ -35,7 +35,7 @@
 #include <Arduino.h>
 #include "crc16.h"
 
-#include "parser.h"
+#include "parser2.h"
 
 namespace dsmr {
 
@@ -69,10 +69,21 @@ class P1Reader {
      * output, the Stream is assumed to be already set up (e.g. baud
      * rate configured).
      */
-    P1Reader(Stream *stream, uint8_t req_pin)
+    P1Reader(Stream *stream, uint8_t req_pin, bool checksum = true)
       : stream(stream), req_pin(req_pin), once(false), state(State::DISABLED_STATE) {
       pinMode(req_pin, OUTPUT);
       digitalWrite(req_pin, LOW);
+      this->checksum = checksum;
+    }
+
+    /**
+     * Enable checksum test.
+     * @param  checksum    When
+     *                 true: calculate and check checksum
+     *                 false: there is no checksum, so skip it
+     */
+    void doChecksum(bool checksum) {
+      this->checksum = checksum;
     }
 
     /**
@@ -110,7 +121,7 @@ class P1Reader {
     bool available() {
       return this->_available;
     }
-
+    
     /**
      * Check for new data to read. Should be called regularly, such as
      * once every loop. Returns true if a complete message is available
@@ -121,27 +132,37 @@ class P1Reader {
         if (state == State::CHECKSUM_STATE) {
           // Let the Stream buffer the CRC bytes. Convert to size_t to
           // prevent unsigned vs signed comparison
-          if ((size_t)this->stream->available() < CrcParser::CRC_LEN)
-            return false;
-
+          if (this->checksum) {
+            if ((size_t)this->stream->available() < CrcParser::CRC_LEN)
+              return false;
+          }
+          
           char buf[CrcParser::CRC_LEN];
           for (uint8_t i = 0; i < CrcParser::CRC_LEN; ++i)
+          {
+            delay(0); // yield()
             buf[i] = this->stream->read();
-
+          }
           ParseResult<uint16_t> crc = CrcParser::parse(buf, buf + lengthof(buf));
 
           // Prepare for next message
           state = State::WAITING_STATE;
 
-          if (!crc.err && crc.result == this->crc) {
-            // Message complete, checksum correct
-            this->_available = true;
-
-            if (once)
-             this->disable();
-
-            return true;
+          if (this->checksum) {
+            if (!crc.err && crc.result == this->crc) {
+              // Message complete, checksum correct
+              this->_available = true;
+            }
           }
+          else
+          {
+            this->_available = true;
+          }
+          if (once)
+           this->disable();
+
+          return true;
+
         } else {
           // For other states, read bytes one by one
           int c = this->stream->read();
@@ -177,6 +198,7 @@ class P1Reader {
               break;
           }
         }
+        delay(0); // force yield()
       }
       return false;
     }
@@ -198,7 +220,8 @@ class P1Reader {
      * message is appended to that string.
      */
     template<typename... Ts>
-    bool parse(ParsedData<Ts...> *data, String *err) {
+    //--bool parse(ParsedData<Ts...> *data, String *err, bool unknown_error = false) {
+    bool parse(ParsedData<Ts...> *data, String *err, bool checksum = false) {
       const char *str = buffer.c_str(), *end = buffer.c_str() + buffer.length();
       ParseResult<void> res = P1Parser::parse_data(data, str, end);
 
@@ -231,7 +254,7 @@ class P1Reader {
       CHECKSUM_STATE,
     };
     bool _available;
-    bool once;
+    bool once, checksum;
     State state;
     String buffer;
     uint16_t crc;

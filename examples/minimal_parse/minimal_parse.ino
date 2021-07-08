@@ -9,7 +9,7 @@
  * the result.
 */
 
-#include "dsmr.h"
+#include "dsmr2.h"
 
 // Data to parse
 const char msg[] =
@@ -31,7 +31,8 @@ using MyData = ParsedData<
 
 void setup() {
   Serial.begin(115200);
-
+  delay(250);
+  
   MyData data;
   ParseResult<void> res = P1Parser::parse(&data, msg, lengthof(msg));
   if (res.err) {

@@ -5,6 +5,11 @@
  *
  * Copyright (c) 2015 Matthijs Kooijman <matthijs@stdin.nl>
  *
+ *------------------------------------------------------------------------------
+ * Changed by Willem Aandewiel
+ * - Skip UNIT test (it should test for the unit but not raise an error)
+ *------------------------------------------------------------------------------
+ *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -187,6 +192,7 @@ struct NumParser {
 
     // Parse integer part
     while(num_end < end && !strchr("*.)", *num_end)) {
+      delay(0); //  yield()
       if (*num_end < '0' || *num_end > '9')
         return res.fail((const __FlashStringHelper*)INVALID_NUMBER, num_end);
       value *= 10;
@@ -199,6 +205,7 @@ struct NumParser {
       ++num_end;
 
       while(num_end < end && !strchr("*)", *num_end) && max_decimals--) {
+        delay(0); //  yield()
         if (*num_end < '0' || *num_end > '9')
           return res.fail((const __FlashStringHelper*)INVALID_NUMBER, num_end);
         value *= 10;
@@ -216,11 +223,20 @@ struct NumParser {
         return res.fail(F("Missing unit"), num_end);
       const char *unit_start = ++num_end; // skip *
       while(num_end < end && *num_end != ')' && *unit) {
+        delay(0); //  yield()
         if (*num_end++ != *unit++)
-          return res.fail((const __FlashStringHelper*)INVALID_UNIT, unit_start);
+        {
+          //--AaW accept all unit's 
+          //--AaW don't raise an error 
+          //return res.fail((const __FlashStringHelper*)INVALID_UNIT, unit_start);
+        }
       }
       if (*unit)
-        return res.fail((const __FlashStringHelper*)INVALID_UNIT, unit_start);
+      {
+        //--AaW accept all unit's 
+        //--AaW don't raise an error 
+        //return res.fail((const __FlashStringHelper*)INVALID_UNIT, unit_start);
+      }
     }
 
     if (num_end >= end || *num_end != ')')
@@ -242,6 +258,7 @@ struct ObisIdParser {
     while (res.next < end) {
       char c = *res.next;
 
+      delay(0); //  yield()
       if (c >= '0' && c <= '9') {
         uint8_t digit = c - '0';
         if (id.v[part] > 25 || (id.v[part] == 25 && digit > 5))
@@ -306,7 +323,7 @@ struct P1Parser {
     * pointer in the result will indicate the next unprocessed byte.
     */
   template <typename... Ts>
-  static ParseResult<void> parse(ParsedData<Ts...> *data, const char *str, size_t n, bool unknown_error = false) {
+  static ParseResult<void> parse(ParsedData<Ts...> *data, const char *str, size_t n, bool unknown_error = false, bool checksum = true) {
     ParseResult<void> res;
     if (!n || str[0] != '/')
       return res.fail(F("Data should start with /"), str);
@@ -316,27 +333,47 @@ struct P1Parser {
 
     // Look for ! that terminates the data
     const char *data_end = data_start;
-    uint16_t crc = _crc16_update(0, *str); // Include the / in CRC
-    while (data_end < str + n && *data_end != '!') {
-      crc = _crc16_update(crc, *data_end);
-      ++data_end;
+    const char *next = NULL;
+    if(checksum) {
+
+      uint16_t crc = _crc16_update(0, *str); // Include the / in CRC
+      while (data_end < str + n && *data_end != '!') {
+        delay(0); //  yield()
+        crc = _crc16_update(crc, *data_end);
+        ++data_end;
+      }
+
+      if (data_end >= str + n)
+        return res.fail(F("No checksum found"), data_end);
+
+      crc = _crc16_update(crc, *data_end); // Include the ! in CRC
+
+      ParseResult<uint16_t> check_res = CrcParser::parse(data_end + 1, str + n);
+      if (check_res.err)
+        return check_res;
+
+      // Check CRC
+      if (check_res.result != crc)
+        return res.fail(F("Checksum mismatch"), data_end + 1);
+      next = check_res.next;  
+    } else {
+      // There's no CRC check, still need to know where the message ends (!)
+      while (data_end < str + n && *data_end != '!') {
+        delay(0); //  yield()
+        ++data_end;
+      }
+
+      // Skip to end-of-line, everything afther that is not yet processed.
+      next = data_end;
+      while (next < str + n && *next != '\r' && *next != '\n') {
+        delay(0); //  yield()
+        ++next;
+      }
     }
 
-    if (data_end >= str + n)
-      return res.fail(F("No checksum found"), data_end);
-
-    crc = _crc16_update(crc, *data_end); // Include the ! in CRC
-
-    ParseResult<uint16_t> check_res = CrcParser::parse(data_end + 1, str + n);
-    if (check_res.err)
-      return check_res;
-
-    // Check CRC
-    if (check_res.result != crc)
-      return res.fail(F("Checksum mismatch"), data_end + 1);
-
     res = parse_data(data, data_start, data_end, unknown_error);
-    res.next = check_res.next;
+    //res.next = check_res.next;           
+    res.next = next;           
     return res;
   }
 
@@ -346,13 +383,16 @@ struct P1Parser {
    * checksum. Does not verify the checksum.
    */
   template <typename... Ts>
-  static ParseResult<void> parse_data(ParsedData<Ts...> *data, const char *str, const char *end, bool unknown_error = false) {
+  //--static ParseResult<void> parse_data(ParsedData<Ts...> *data, const char *str, const char *end, bool unknown_error = false) {
+  static ParseResult<void> parse_data(ParsedData<Ts...> *data, const char *str, const char *end, bool checksum = false) {
     ParseResult<void> res;
+    bool unknown_error = false;
     // Split into lines and parse those
     const char *line_end = str, *line_start = str;
 
     // Parse ID line
     while (line_end < end) {
+      delay(0); //  yield()
       if (*line_end == '\r' || *line_end == '\n') {
         // The first identification line looks like:
         // XXX5<id string>
@@ -379,11 +419,16 @@ struct P1Parser {
 
     // Parse data lines
     while (line_end < end) {
-      if (*line_end == '\r' || *line_end == '\n') {
+      delay(0); //  yield()
+      // When a line is skipped line_start > line_end.
+      // i.e. line_start is already at the next line, line_end is still behind,
+      // continue iterating over line_end until the next line is found.
+      if (*line_end == '\r' || *line_end == '\n' && line_start <= line_end) {
         ParseResult<void> tmp = parse_line(data, line_start, line_end, unknown_error);
         if (tmp.err)
           return tmp;
-        line_start = line_end + 1;
+
+        line_start = tmp.next;
       }
       line_end++;
     }
@@ -397,8 +442,9 @@ struct P1Parser {
   template <typename Data>
   static ParseResult<void> parse_line(Data *data, const char *line, const char *end, bool unknown_error) {
     ParseResult<void> res;
+
     if (line == end)
-      return res;
+      return res.until(end + 1);
 
     ParseResult<ObisId> idres = ObisIdParser::parse(line, end);
     if (idres.err)
@@ -408,15 +454,18 @@ struct P1Parser {
     if (datares.err)
       return datares;
 
+    // If datares.next > end, a line is skipped.
+    if(datares.next != idres.next && datares.next > end)
+      return res.until(datares.next);
     // If datares.next didn't move at all, there was no parser for
     // this field, that's ok. But if it did move, but not all the way
     // to the end, that's an error.
-    if (datares.next != idres.next && datares.next != end)
+    else if (datares.next != idres.next && datares.next != end)
       return res.fail(F("Trailing characters on data line"), datares.next);
     else if (datares.next == idres.next && unknown_error)
       return res.fail(F("Unknown field"), line);
 
-    return res.until(end);
+    return res.until(end + 1);
   }
 };
 

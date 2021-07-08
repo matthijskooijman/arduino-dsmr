@@ -4,6 +4,10 @@
  * This software is licensed under the MIT License.
  *
  * Copyright (c) 2015 Matthijs Kooijman <matthijs@stdin.nl>
+ * 
+ * Changed by Willem Aandewiel to incorporate Non Temperature Compensated
+ * GAS meter readings. GAS meter is no longer hardcoded on M-BUS 1 and
+ * the obis for the Belgium P1_Version (p1_versionBE) is available.
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -32,9 +36,9 @@
 #ifndef DSMR_INCLUDE_DSMR_H
 #define DSMR_INCLUDE_DSMR_H
 
-#include "dsmr/parser.h"
-#include "dsmr/reader.h"
-#include "dsmr/fields.h"
+#include "dsmr2/parser2.h"
+#include "dsmr2/reader2.h"
+#include "dsmr2/fields2.h"
 
 // Allow using everything without the namespace prefixes
 using namespace dsmr;

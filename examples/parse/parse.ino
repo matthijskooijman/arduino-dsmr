@@ -9,10 +9,10 @@
  * the result.
 */
 
-#include "dsmr.h"
+#include "dsmr2.h"
 
 // Data to parse
-const char raw[] =
+const char rawcrc[] =
   "/KFM5KAIFA-METER\r\n"
   "\r\n"
   "1-3:0.2.8(40)\r\n"
@@ -42,6 +42,38 @@ const char raw[] =
   "0-1:24.2.1(150117180000W)(00473.789*m3)\r\n"
   "0-1:24.4.0(1)\r\n"
   "!6F4A\r\n";
+  
+// Data to parse
+const char rawnocrc[] =
+     "/KMP5 KA6U001585654321\r\n"
+    "\r\n"
+    "0-0:96.1.1(4530303336303033373839373331234567)\r\n"
+    "1-0:1.8.1(000180.670*kWh)\r\n"
+    "1-0:1.8.2(000091.890*kWh)\r\n"
+    "1-0:2.8.1(000117.100*kWh)\r\n"
+    "1-0:2.8.2(000079.500*kWh)\r\n"
+    "0-0:96.14.0(0002)\r\n"
+    "1-0:1.7.0(212.33*kW)\r\n"
+    "1-0:2.7.0(029.73*kW)\r\n"
+    "0-0:96.13.0()\r\n"
+    "0-0:96.13.1()\r\n"
+    "0-1:24.1.0(3)\r\n"
+    "0-1:96.1.0(4730301234567031363532303530323136)\r\n"
+    "0-1:24.3.0(140101004100)(08)(60)(1)(0-1:24.2.1)(m3)\r\n"
+    "(00100.006)\r\n"
+    "0-3:24.1.0(3)\r\n"
+    "0-3:96.1.0(4730301234567031363532303530323136)\r\n"
+    "0-3:24.3.0(140101004100)(08)(60)(1)(0-1:24.2.1)(m3)\r\n"
+    "(00300.006)\r\n"
+    "0-2:24.1.0(3)\r\n"
+    "0-2:96.1.0(4730301234567031363532303530323136)\r\n"
+    "0-2:24.3.0(140101004100)(08)(60)(1)(0-1:24.2.1)(m3)\r\n"
+    "(00200.006)\r\n"
+    "0-4:24.1.0(3)\r\n"
+    "0-4:96.1.0(4730301234567031363532303530323136)\r\n"
+    "0-4:24.3.0(140101004100)(08)(60)(1)(0-1:24.2.1)(m3)\r\n"
+    "(00400.006)\r\n"
+    "!\r\n";
 
 /**
  * Define the data we're interested in, as well as the datastructure to
@@ -51,58 +83,71 @@ const char raw[] =
  * Each template argument below results in a field of the same name.
  */
 using MyData = ParsedData<
-  /* String */ identification,
-  /* String */ p1_version,
-  /* String */ timestamp,
-  /* String */ equipment_id,
-  /* FixedValue */ energy_delivered_tariff1,
-  /* FixedValue */ energy_delivered_tariff2,
-  /* FixedValue */ energy_returned_tariff1,
-  /* FixedValue */ energy_returned_tariff2,
-  /* String */ electricity_tariff,
-  /* FixedValue */ power_delivered,
-  /* FixedValue */ power_returned,
-  /* FixedValue */ electricity_threshold,
-  /* uint8_t */ electricity_switch_position,
-  /* uint32_t */ electricity_failures,
-  /* uint32_t */ electricity_long_failures,
-  /* String */ electricity_failure_log,
-  /* uint32_t */ electricity_sags_l1,
-  /* uint32_t */ electricity_sags_l2,
-  /* uint32_t */ electricity_sags_l3,
-  /* uint32_t */ electricity_swells_l1,
-  /* uint32_t */ electricity_swells_l2,
-  /* uint32_t */ electricity_swells_l3,
-  /* String */ message_short,
-  /* String */ message_long,
-  /* FixedValue */ voltage_l1,
-  /* FixedValue */ voltage_l2,
-  /* FixedValue */ voltage_l3,
-  /* FixedValue */ current_l1,
-  /* FixedValue */ current_l2,
-  /* FixedValue */ current_l3,
-  /* FixedValue */ power_delivered_l1,
-  /* FixedValue */ power_delivered_l2,
-  /* FixedValue */ power_delivered_l3,
-  /* FixedValue */ power_returned_l1,
-  /* FixedValue */ power_returned_l2,
-  /* FixedValue */ power_returned_l3,
-  /* uint16_t */ gas_device_type,
-  /* String */ gas_equipment_id,
-  /* uint8_t */ gas_valve_position,
-  /* TimestampedFixedValue */ gas_delivered,
-  /* uint16_t */ thermal_device_type,
-  /* String */ thermal_equipment_id,
-  /* uint8_t */ thermal_valve_position,
-  /* TimestampedFixedValue */ thermal_delivered,
-  /* uint16_t */ water_device_type,
-  /* String */ water_equipment_id,
-  /* uint8_t */ water_valve_position,
-  /* TimestampedFixedValue */ water_delivered,
-  /* uint16_t */ slave_device_type,
-  /* String */ slave_equipment_id,
-  /* uint8_t */ slave_valve_position,
-  /* TimestampedFixedValue */ slave_delivered
+  /* String */                 identification
+  /* String */                ,p1_version
+  /* String */                ,p1_version_be
+  /* String */                ,timestamp
+  /* String */                ,equipment_id
+  /* FixedValue */            ,energy_delivered_tariff1
+  /* FixedValue */            ,energy_delivered_tariff2
+  /* FixedValue */            ,energy_returned_tariff1
+  /* FixedValue */            ,energy_returned_tariff2
+  /* String */                ,electricity_tariff
+  /* FixedValue */            ,power_delivered
+  /* FixedValue */            ,power_returned
+  /* FixedValue */            ,electricity_threshold
+  /* uint8_t */               ,electricity_switch_position
+  /* uint32_t */              ,electricity_failures
+  /* uint32_t */              ,electricity_long_failures
+  /* String */                ,electricity_failure_log
+  /* uint32_t */              ,electricity_sags_l1
+  /* uint32_t */              ,electricity_sags_l2
+  /* uint32_t */              ,electricity_sags_l3
+  /* uint32_t */              ,electricity_swells_l1
+  /* uint32_t */              ,electricity_swells_l2
+  /* uint32_t */              ,electricity_swells_l3
+  /* String */                ,message_short
+  /* String */                ,message_long
+  /* FixedValue */            ,voltage_l1
+  /* FixedValue */            ,voltage_l2
+  /* FixedValue */            ,voltage_l3
+  /* FixedValue */            ,current_l1
+  /* FixedValue */            ,current_l2
+  /* FixedValue */            ,current_l3
+  /* FixedValue */            ,power_delivered_l1
+  /* FixedValue */            ,power_delivered_l2
+  /* FixedValue */            ,power_delivered_l3
+  /* FixedValue */            ,power_returned_l1
+  /* FixedValue */            ,power_returned_l2
+  /* FixedValue */            ,power_returned_l3
+  /* uint16_t */              ,mbus1_device_type
+  /* String */                ,mbus1_equipment_id_tc
+  /* String */                ,mbus1_equipment_id_ntc
+  /* uint8_t */               ,mbus1_valve_position
+  /* TimestampedFixedValue */ ,mbus1_delivered
+  /* TimestampedFixedValue */ ,mbus1_delivered_ntc
+  /* TimestampedFixedValue */ ,mbus1_delivered_dbl
+  /* uint16_t */              ,mbus2_device_type
+  /* String */                ,mbus2_equipment_id_tc
+  /* String */                ,mbus2_equipment_id_ntc
+  /* uint8_t */               ,mbus2_valve_position
+  /* TimestampedFixedValue */ ,mbus2_delivered
+  /* TimestampedFixedValue */ ,mbus2_delivered_ntc
+  /* TimestampedFixedValue */ ,mbus2_delivered_dbl
+  /* uint16_t */              ,mbus3_device_type
+  /* String */                ,mbus3_equipment_id_tc
+  /* String */                ,mbus3_equipment_id_ntc
+  /* uint8_t */               ,mbus3_valve_position
+  /* TimestampedFixedValue */ ,mbus3_delivered
+  /* TimestampedFixedValue */ ,mbus3_delivered_ntc
+  /* TimestampedFixedValue */ ,mbus3_delivered_dbl
+  /* uint16_t */              ,mbus4_device_type
+  /* String */                ,mbus4_equipment_id_tc
+  /* String */                ,mbus4_equipment_id_ntc
+  /* uint8_t */               ,mbus4_valve_position
+  /* TimestampedFixedValue */ ,mbus4_delivered
+  /* TimestampedFixedValue */ ,mbus4_delivered_ntc
+  /* TimestampedFixedValue */ ,mbus4_delivered_dbl
 >;
 
 /**
@@ -139,16 +184,39 @@ struct Printer {
 
 void setup() {
   Serial.begin(115200);
+  while(!Serial) {/*wait a while*/ delay(100);}
+  delay(2000);
+  Serial.println("\r\n----------------------------------------------------");
 
+  Serial.print(rawcrc);
+  Serial.println("----------------------------------------------------");
   MyData data;
-  ParseResult<void> res = P1Parser::parse(&data, raw, lengthof(raw), true);
-  if (res.err) {
+  ParseResult<void> res1 = P1Parser::parse(&data, rawcrc, lengthof(rawcrc), true, true);
+  if (res1.err) {
     // Parsing error, show it
-    Serial.println(res.fullError(raw, raw + lengthof(raw)));
+    Serial.println("P1Parser: Error found!");
+    Serial.println(res1.fullError(rawcrc, rawcrc + lengthof(rawcrc)));
   } else {
     // Parsed succesfully, print all values
+    Serial.println("P1Parser: OK!\r\n");
     data.applyEach(Printer());
   }
+
+  Serial.println("\r\n----------------------------------------------------");
+  Serial.print(rawnocrc);
+  Serial.println("----------------------------------------------------");
+  data = {};
+  ParseResult<void> res2 = P1Parser::parse(&data, rawnocrc, lengthof(rawnocrc), true, false);
+  if (res2.err) {
+    // Parsing error, show it
+    Serial.println("P1Parser: Error found!");
+    Serial.println(res2.fullError(rawnocrc, rawnocrc + lengthof(rawnocrc)));
+  } else {
+    // Parsed succesfully, print all values
+    Serial.println("P1Parser: OK!\r\n");
+    data.applyEach(Printer());
+  }
+  
 }
 
 void loop () {
