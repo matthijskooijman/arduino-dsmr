@@ -30,7 +30,6 @@
 
 #include "fields.h"
 
-
 using namespace dsmr;
 using namespace dsmr::fields;
 
@@ -259,4 +258,3 @@ constexpr const __FlashStringHelper *slave_valve_position::name;
 constexpr ObisId slave_delivered::id;
 constexpr char slave_delivered::name_progmem[];
 constexpr const __FlashStringHelper *slave_delivered::name;
-

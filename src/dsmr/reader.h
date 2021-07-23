@@ -37,9 +37,10 @@
 
 #include "parser.h"
 
-namespace dsmr {
+namespace dsmr
+{
 
-/**
+  /**
  * Controls the request pin on the P1 port to enable (periodic)
  * transmission of messages and reads those messages.
  *
@@ -60,7 +61,8 @@ namespace dsmr {
  * partial message is discarded. Any bytes received while disabled are
  * dropped.
  */
-class P1Reader {
+  class P1Reader
+  {
   public:
     /**
      * Create a new P1Reader. The stream passed should be the serial
@@ -70,7 +72,8 @@ class P1Reader {
      * rate configured).
      */
     P1Reader(Stream *stream, uint8_t req_pin)
-      : stream(stream), req_pin(req_pin), once(false), state(State::DISABLED_STATE) {
+        : stream(stream), req_pin(req_pin), once(false), state(State::DISABLED_STATE)
+    {
       pinMode(req_pin, OUTPUT);
       digitalWrite(req_pin, LOW);
     }
@@ -83,7 +86,8 @@ class P1Reader {
      *                 enabled, so messages will continue to be sent
      *                 periodically.
      */
-    void enable(bool once) {
+    void enable(bool once)
+    {
       digitalWrite(this->req_pin, HIGH);
       this->state = State::WAITING_STATE;
       this->once = once;
@@ -94,20 +98,23 @@ class P1Reader {
      * previously received, but a complete message will be kept until
      * clear() is called.
      */
-    void disable() {
+    void disable()
+    {
       digitalWrite(this->req_pin, LOW);
       this->state = State::DISABLED_STATE;
       if (!this->_available)
         this->buffer = "";
       // Clear any pending bytes
-      while(this->stream->read() >= 0) /* nothing */;
+      while (this->stream->read() >= 0) /* nothing */
+        ;
     }
 
     /**
      * Returns true when a complete and correct message was received,
      * until it is cleared.
      */
-    bool available() {
+    bool available()
+    {
       return this->_available;
     }
 
@@ -116,9 +123,12 @@ class P1Reader {
      * once every loop. Returns true if a complete message is available
      * (just like available).
      */
-    bool loop() {
-      while(true) {
-        if (state == State::CHECKSUM_STATE) {
+    bool loop()
+    {
+      while (true)
+      {
+        if (state == State::CHECKSUM_STATE)
+        {
           // Let the Stream buffer the CRC bytes. Convert to size_t to
           // prevent unsigned vs signed comparison
           if ((size_t)this->stream->available() < CrcParser::CRC_LEN)
@@ -133,48 +143,53 @@ class P1Reader {
           // Prepare for next message
           state = State::WAITING_STATE;
 
-          if (!crc.err && crc.result == this->crc) {
+          if (!crc.err && crc.result == this->crc)
+          {
             // Message complete, checksum correct
             this->_available = true;
 
             if (once)
-             this->disable();
+              this->disable();
 
             return true;
           }
-        } else {
+        }
+        else
+        {
           // For other states, read bytes one by one
           int c = this->stream->read();
           if (c < 0)
             return false;
 
-          switch (this->state) {
-            case State::DISABLED_STATE:
-              // Where did this byte come from? Just toss it
-              break;
-            case State::WAITING_STATE:
-              if (c == '/') {
-                this->state = State::READING_STATE;
-                // Include the / in the CRC
-                this->crc = _crc16_update(0, c);
-                this->clear();
-              }
-              break;
-            case State::READING_STATE:
-              // Include the ! in the CRC
-              this->crc = _crc16_update(this->crc, c);
-              if (c == '!')
-                this->state = State::CHECKSUM_STATE;
-              else
-                buffer.concat((char)c);
+          switch (this->state)
+          {
+          case State::DISABLED_STATE:
+            // Where did this byte come from? Just toss it
+            break;
+          case State::WAITING_STATE:
+            if (c == '/')
+            {
+              this->state = State::READING_STATE;
+              // Include the / in the CRC
+              this->crc = _crc16_update(0, c);
+              this->clear();
+            }
+            break;
+          case State::READING_STATE:
+            // Include the ! in the CRC
+            this->crc = _crc16_update(this->crc, c);
+            if (c == '!')
+              this->state = State::CHECKSUM_STATE;
+            else
+              buffer.concat((char)c);
 
-              break;
-            case State::CHECKSUM_STATE:
-              // This cannot happen (given the surrounding if), but the
-              // compiler is not smart enough to see this, so list this
-              // case to prevent a warning.
-              abort();
-              break;
+            break;
+          case State::CHECKSUM_STATE:
+            // This cannot happen (given the surrounding if), but the
+            // compiler is not smart enough to see this, so list this
+            // case to prevent a warning.
+            abort();
+            break;
           }
         }
       }
@@ -184,7 +199,8 @@ class P1Reader {
     /**
      * Returns the data read so far.
      */
-    const String &raw() {
+    const String &raw()
+    {
       return buffer;
     }
 
@@ -197,8 +213,9 @@ class P1Reader {
      * If parsing fails, false is returned. If err is passed, the error
      * message is appended to that string.
      */
-    template<typename... Ts>
-    bool parse(ParsedData<Ts...> *data, String *err) {
+    template <typename... Ts>
+    bool parse(ParsedData<Ts...> *data, String *err)
+    {
       const char *str = buffer.c_str(), *end = buffer.c_str() + buffer.length();
       ParseResult<void> res = P1Parser::parse_data(data, str, end);
 
@@ -214,8 +231,10 @@ class P1Reader {
     /**
      * Clear any complete message from the buffer.
      */
-    void clear() {
-      if (_available) {
+    void clear()
+    {
+      if (_available)
+      {
         buffer = "";
         _available = false;
       }
@@ -224,7 +243,8 @@ class P1Reader {
   protected:
     Stream *stream;
     uint8_t req_pin;
-    enum class State : uint8_t {
+    enum class State : uint8_t
+    {
       DISABLED_STATE,
       WAITING_STATE,
       READING_STATE,
@@ -235,7 +255,7 @@ class P1Reader {
     State state;
     String buffer;
     uint16_t crc;
-};
+  };
 
 } // namespace dsmr
 
