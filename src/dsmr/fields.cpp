@@ -50,6 +50,8 @@ constexpr char units::m3[];
 constexpr char units::dm3[];
 constexpr char units::GJ[];
 constexpr char units::MJ[];
+constexpr char units::kvar[];
+constexpr char units::kvarh[];
 
 constexpr ObisId identification::id;
 constexpr char identification::name_progmem[];
@@ -59,6 +61,11 @@ constexpr ObisId p1_version::id;
 constexpr char p1_version::name_progmem[];
 constexpr const __FlashStringHelper *p1_version::name;
 
+/* extra field for Belgium */
+constexpr ObisId p1_version_be::id;
+constexpr char p1_version_be::name_progmem[];
+constexpr const __FlashStringHelper *p1_version_be::name;
+
 constexpr ObisId timestamp::id;
 constexpr char timestamp::name_progmem[];
 constexpr const __FlashStringHelper *timestamp::name;
@@ -66,6 +73,11 @@ constexpr const __FlashStringHelper *timestamp::name;
 constexpr ObisId equipment_id::id;
 constexpr char equipment_id::name_progmem[];
 constexpr const __FlashStringHelper *equipment_id::name;
+
+/* extra for Lux */
+constexpr ObisId energy_delivered_lux::id;
+constexpr char energy_delivered_lux::name_progmem[];
+constexpr const __FlashStringHelper *energy_delivered_lux::name;
 
 constexpr ObisId energy_delivered_tariff1::id;
 constexpr char energy_delivered_tariff1::name_progmem[];
@@ -75,6 +87,11 @@ constexpr ObisId energy_delivered_tariff2::id;
 constexpr char energy_delivered_tariff2::name_progmem[];
 constexpr const __FlashStringHelper *energy_delivered_tariff2::name;
 
+/* extra for Lux */
+constexpr ObisId energy_returned_lux::id;
+constexpr char energy_returned_lux::name_progmem[];
+constexpr const __FlashStringHelper *energy_returned_lux::name;
+
 constexpr ObisId energy_returned_tariff1::id;
 constexpr char energy_returned_tariff1::name_progmem[];
 constexpr const __FlashStringHelper *energy_returned_tariff1::name;
@@ -82,6 +99,26 @@ constexpr const __FlashStringHelper *energy_returned_tariff1::name;
 constexpr ObisId energy_returned_tariff2::id;
 constexpr char energy_returned_tariff2::name_progmem[];
 constexpr const __FlashStringHelper *energy_returned_tariff2::name;
+
+/* extra for Lux */
+constexpr ObisId total_imported_energy::id;
+constexpr char total_imported_energy::name_progmem[];
+constexpr const __FlashStringHelper *total_imported_energy::name;
+
+/* extra for Lux */
+constexpr ObisId total_exported_energy::id;
+constexpr char total_exported_energy::name_progmem[];
+constexpr const __FlashStringHelper *total_exported_energy::name;
+
+/* extra for Lux */
+constexpr ObisId reactive_power_delivered::id;
+constexpr char reactive_power_delivered::name_progmem[];
+constexpr const __FlashStringHelper *reactive_power_delivered::name;
+
+/* extra for Lux */
+constexpr ObisId reactive_power_returned::id;
+constexpr char reactive_power_returned::name_progmem[];
+constexpr const __FlashStringHelper *reactive_power_returned::name;
 
 constexpr ObisId electricity_tariff::id;
 constexpr char electricity_tariff::name_progmem[];
@@ -195,6 +232,36 @@ constexpr ObisId power_returned_l3::id;
 constexpr char power_returned_l3::name_progmem[];
 constexpr const __FlashStringHelper *power_returned_l3::name;
 
+/* LUX */
+constexpr ObisId reactive_power_delivered_l1::id;
+constexpr char reactive_power_delivered_l1::name_progmem[];
+constexpr const __FlashStringHelper *reactive_power_delivered_l1::name;
+
+/* LUX */
+constexpr ObisId reactive_power_delivered_l2::id;
+constexpr char reactive_power_delivered_l2::name_progmem[];
+constexpr const __FlashStringHelper *reactive_power_delivered_l2::name;
+
+/* LUX */
+constexpr ObisId reactive_power_delivered_l3::id;
+constexpr char reactive_power_delivered_l3::name_progmem[];
+constexpr const __FlashStringHelper *reactive_power_delivered_l3::name;
+
+/* LUX */
+constexpr ObisId reactive_power_returned_l1::id;
+constexpr char reactive_power_returned_l1::name_progmem[];
+constexpr const __FlashStringHelper *reactive_power_returned_l1::name;
+
+/* LUX */
+constexpr ObisId reactive_power_returned_l2::id;
+constexpr char reactive_power_returned_l2::name_progmem[];
+constexpr const __FlashStringHelper *reactive_power_returned_l2::name;
+
+/* LUX */
+constexpr ObisId reactive_power_returned_l3::id;
+constexpr char reactive_power_returned_l3::name_progmem[];
+constexpr const __FlashStringHelper *reactive_power_returned_l3::name;
+
 constexpr ObisId gas_device_type::id;
 constexpr char gas_device_type::name_progmem[];
 constexpr const __FlashStringHelper *gas_device_type::name;
@@ -207,9 +274,15 @@ constexpr ObisId gas_valve_position::id;
 constexpr char gas_valve_position::name_progmem[];
 constexpr const __FlashStringHelper *gas_valve_position::name;
 
+/* _NL */
 constexpr ObisId gas_delivered::id;
 constexpr char gas_delivered::name_progmem[];
 constexpr const __FlashStringHelper *gas_delivered::name;
+
+/* _BE */
+constexpr ObisId gas_delivered_be::id;
+constexpr char gas_delivered_be::name_progmem[];
+constexpr const __FlashStringHelper *gas_delivered_be::name;
 
 constexpr ObisId thermal_device_type::id;
 constexpr char thermal_device_type::name_progmem[];

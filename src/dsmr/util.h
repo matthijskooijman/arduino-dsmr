@@ -28,8 +28,7 @@
  * Various utility functions
  */
 
-#ifndef DSMR_INCLUDE_UTIL_H
-#define DSMR_INCLUDE_UTIL_H
+#pragma once
 
 #ifdef ARDUINO_ARCH_ESP8266
 #define DSMR_PROGMEM
@@ -191,12 +190,7 @@ namespace dsmr
         : v{a, b, c, d, e, f} {};
     constexpr ObisId() : v() {} // Zeroes
 
-    bool operator==(const ObisId &other) const
-    {
-      return memcmp(&v, &other.v, sizeof(v)) == 0;
-    }
+    bool operator==(const ObisId &other) const { return memcmp(&v, &other.v, sizeof(v)) == 0; }
   };
 
 } // namespace dsmr
-
-#endif // DSMR_INCLUDE_UTIL_H

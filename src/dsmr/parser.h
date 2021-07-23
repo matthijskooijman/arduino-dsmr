@@ -28,8 +28,7 @@
  * Message parsing core
  */
 
-#ifndef DSMR_INCLUDE_PARSER_H
-#define DSMR_INCLUDE_PARSER_H
+#pragma once
 
 #include "crc16.h"
 #include "util.h"
@@ -70,7 +69,8 @@ namespace dsmr
   template <>
   struct ParsedData<>
   {
-    ParseResult<void> __attribute__((__always_inline__)) parse_line_inlined(const ObisId & /* id */, const char *str, const char * /* end */)
+    ParseResult<void> __attribute__((__always_inline__))
+    parse_line_inlined(const ObisId & /* id */, const char *str, const char * /* end */)
     {
       // Parsing succeeded, but found no matching handler (so return
       // set the next pointer to show nothing was parsed).
@@ -83,10 +83,7 @@ namespace dsmr
       // Nothing to do
     }
 
-    bool all_present_inlined()
-    {
-      return true;
-    }
+    bool all_present_inlined() { return true; }
   };
 
   // Do not use F() for multiply-used strings (including strings used from
@@ -116,7 +113,8 @@ namespace dsmr
    * allow recursively inlining all calls, but still have a non-inlined
    * top-level parse_line method.
    */
-    ParseResult<void> __attribute__((__always_inline__)) parse_line_inlined(const ObisId &id, const char *str, const char *end)
+    ParseResult<void> __attribute__((__always_inline__))
+    parse_line_inlined(const ObisId &id, const char *str, const char *end)
     {
       if (id == T::id)
       {
@@ -129,10 +127,7 @@ namespace dsmr
     }
 
     template <typename F>
-    void applyEach(F &&f)
-    {
-      applyEach_inlined(f);
-    }
+    void applyEach(F &&f) { applyEach_inlined(f); }
 
     template <typename F>
     void __attribute__((__always_inline__)) applyEach_inlined(F &&f)
@@ -144,15 +139,9 @@ namespace dsmr
     /**
    * Returns true when all defined fields are present.
    */
-    bool all_present()
-    {
-      return all_present_inlined();
-    }
+    bool all_present() { return all_present_inlined(); }
 
-    bool all_present_inlined()
-    {
-      return T::present() && ParsedData<Ts...>::all_present_inlined();
-    }
+    bool all_present_inlined() { return T::present() && ParsedData<Ts...>::all_present_inlined(); }
   };
 
   struct StringParser
@@ -336,11 +325,11 @@ namespace dsmr
   struct P1Parser
   {
     /**
-    * Parse a complete P1 telegram. The string passed should start
-    * with '/' and run up to and including the ! and the following
-    * four byte checksum. It's ok if the string is longer, the .next
-    * pointer in the result will indicate the next unprocessed byte.
-    */
+   * Parse a complete P1 telegram. The string passed should start
+   * with '/' and run up to and including the ! and the following
+   * four byte checksum. It's ok if the string is longer, the .next
+   * pointer in the result will indicate the next unprocessed byte.
+   */
     template <typename... Ts>
     static ParseResult<void> parse(ParsedData<Ts...> *data, const char *str, size_t n, bool unknown_error = false)
     {
@@ -371,7 +360,9 @@ namespace dsmr
 
       // Check CRC
       if (check_res.result != crc)
+      {
         return res.fail(F("Checksum mismatch"), data_end + 1);
+      }
 
       res = parse_data(data, data_start, data_end, unknown_error);
       res.next = check_res.next;
@@ -384,7 +375,8 @@ namespace dsmr
    * checksum. Does not verify the checksum.
    */
     template <typename... Ts>
-    static ParseResult<void> parse_data(ParsedData<Ts...> *data, const char *str, const char *end, bool unknown_error = false)
+    static ParseResult<void> parse_data(ParsedData<Ts...> *data, const char *str, const char *end,
+                                        bool unknown_error = false)
     {
       ParseResult<void> res;
       // Split into lines and parse those
@@ -465,5 +457,3 @@ namespace dsmr
   };
 
 } // namespace dsmr
-
-#endif // DSMR_INCLUDE_PARSER_H
