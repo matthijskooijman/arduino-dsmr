@@ -85,7 +85,7 @@ struct FixedValue {
 // digits. To prevent inefficient floating point operations, we store
 // them as a fixed-point number: an integer that stores the value in
 // thousands. For example, a value of 1.234 kWh is stored as 1234. This
-// effectively means that the integer value is het value in Wh. To allow
+// effectively means that the integer value is the value in Wh. To allow
 // automatic printing of these values, both the original unit and the
 // integer unit is passed as a template argument.
 template <typename T, const char *_unit, const char *_int_unit>
