@@ -128,7 +128,7 @@ struct Printer {
   template<typename Item>
   void apply(Item &i) {
     if (i.present()) {
-      Serial.print(Item::name);
+      Serial.print(Item::get_name());
       Serial.print(F(": "));
       Serial.print(i.val());
       Serial.print(Item::unit());
