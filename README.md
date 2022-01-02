@@ -192,14 +192,14 @@ integer version returned.
 	Serial.print(data.power_delivered.int_val());
 
 Additionally there is a `TimestampedFixedValue` method, which works
-identically, but additionally has a `timestamp()` method which returns
+identically, but additionally has a `timestamp` field which stores
 the timestamp sent along with the value.
 
-These timestamps are returned as a string, exactly as present in the P1
-message (YYMMDDhhmmssX, where X is S or W for summer- or wintertime).
-Parsing these into something like a UNIX timestamp is tricky (think
-leap years and seconds) and of limited use, so this just keeps the
-original format.
+These timestamps are returned as a String object, exactly as present in
+the P1 message (YYMMDDhhmmssX, where X is S or W for summer- or
+wintertime).  Parsing these into something like a UNIX timestamp is
+tricky (think leap years and seconds) and of limited use, so this just
+keeps the original format.
 
 Connecting the P1 port
 ----------------------
