@@ -167,10 +167,8 @@ constexpr ObisId message_short::id;
 constexpr char message_short::name_progmem[];
 //constexpr const __FlashStringHelper *message_short::name;
 
-//-- This is a very long field that makes the sketch crash
-//-- so remove Obis 0-0:96.13.0
-//--aaw-constexpr ObisId message_long::id;
-//--aaw-constexpr char message_long::name_progmem[];
+constexpr ObisId message_long::id;
+constexpr char message_long::name_progmem[];
 //constexpr const __FlashStringHelper *message_long::name;
 
 constexpr ObisId voltage_l1::id;
