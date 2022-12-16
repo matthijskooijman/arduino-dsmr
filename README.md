@@ -159,7 +159,7 @@ need, to make the parsing and printing code smaller and faster.
 Parsed value types
 ------------------
 Some values are parsed to an Arduino `String` value or C++ integer type,
-those should be fairly straightforward. There are three special types
+those should be fairly straightforward. There are two special types
 that need some explanation: `FixedValue` and `TimestampedFixedValue`.
 
 When looking at the DSMR P1 format, it defines a floating point format.
@@ -191,7 +191,7 @@ integer version returned.
 	// Print as integer, in W
 	Serial.print(data.power_delivered.int_val());
 
-Additionally there is a `TimestampedFixedValue` method, which works
+Additionally there is a `TimestampedFixedValue` type, which works
 identically, but additionally has a `timestamp` field which stores
 the timestamp sent along with the value.
 
