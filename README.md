@@ -195,6 +195,11 @@ Additionally there is a `TimestampedFixedValue` type, which works
 identically, but additionally has a `timestamp` field which stores
 the timestamp sent along with the value.
 
+	// Print as float, in m³
+	Serial.print(data.gas_delivered);
+	// Print timestamp as String
+	Serial.print(data.gas_delivered.timestamp);
+
 These timestamps are returned as a String object, exactly as present in
 the P1 message (YYMMDDhhmmssX, where X is S or W for summer- or
 wintertime).  Parsing these into something like a UNIX timestamp is
