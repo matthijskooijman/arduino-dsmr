@@ -362,15 +362,17 @@ struct P1Parser {
         // The first identification line looks like:
         // XXX5<id string>
         // The DSMR spec is vague on details, but in 62056-21, the X's
-        // are a three-leter (registerd) manufacturer ID, the id
+        // are a three-letter (registerd) manufacturer ID, the id
         // string is up to 16 chars of arbitrary characters and the
         // '5' is a baud rate indication. 5 apparently means 9600,
         // which DSMR 3.x and below used. It seems that DSMR 2.x
         // passed '3' here (which is mandatory for "mode D"
         // communication according to 62956-21), so we also allow
-        // that.
-        if (line_start + 3 >= line_end || (line_start[3] != '5' && line_start[3] != '3'))
-          return res.fail(F("Invalid identification string"), line_start);
+        // that. Apparently swedish meters use '9' for 115200. This code
+        // used to check the format of the line somewhat, but for
+        // flexibility (and since we do not actually parse the contents
+        // of the line anyway), just allow anything now.
+        //
         // Offer it for processing using the all-ones Obis ID, which
         // is not otherwise valid.
         ParseResult<void> tmp = data->parse_line(ObisId(255, 255, 255, 255, 255, 255), line_start, line_end);
