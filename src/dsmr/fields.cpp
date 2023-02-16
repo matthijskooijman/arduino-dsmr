@@ -51,6 +51,8 @@ constexpr char units::m3[];
 constexpr char units::dm3[];
 constexpr char units::GJ[];
 constexpr char units::MJ[];
+constexpr char units::kvar[];
+constexpr char units::kvarh[];
 
 constexpr ObisId identification::id;
 constexpr char identification::name_progmem[];
