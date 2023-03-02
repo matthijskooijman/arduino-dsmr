@@ -51,6 +51,8 @@ constexpr char units::m3[];
 constexpr char units::dm3[];
 constexpr char units::GJ[];
 constexpr char units::MJ[];
+constexpr char units::kvar[];
+constexpr char units::kvarh[];
 
 constexpr ObisId identification::id;
 constexpr char identification::name_progmem[];
@@ -208,3 +210,18 @@ constexpr char slave_valve_position::name_progmem[];
 constexpr ObisId slave_delivered::id;
 constexpr char slave_delivered::name_progmem[];
 
+/* extra field for Tauron ZE.314 */
+constexpr ObisId meter_time::id;
+constexpr char meter_time::name[];
+
+constexpr ObisId meter_date::id;
+constexpr char meter_date::name[];
+
+constexpr ObisId total_imported_inductive_reactive_energy::id;
+constexpr char total_imported_inductive_reactive_energy::name[];
+
+constexpr ObisId total_imported_capacitive_reactive_energy::id;
+constexpr char total_imported_capacitive_reactive_energy::name[];
+
+constexpr ObisId absolute_active_instantaneous_power::id;
+constexpr char absolute_active_instantaneous_power::name[];
