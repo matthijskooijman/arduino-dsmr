@@ -1,6 +1,8 @@
-Arduino Dutch Smart meter (DSMR) parser
-=======================================
-This is an Arduino library for interfacing with Dutch smart meters, through
+Arduino Dutch and Belgium Smart meter (DSMR) parser
+===================================================
+This library is a fork from the original Arduino Dutch Smart Meter parser, made by Matthijs Kooijman. It is made so it can be a full replacement for the original library, if you use the switch #define DSMR_IN_BELIGUM in your code, then the definition of the fields is switched to the Belgium specification.
+
+This is an Arduino library for interfacing with Dutch and Belgium smart meters, through
 their P1 port. This library can take care of controlling the "request" pin,
 reading messages and parsing them.
 

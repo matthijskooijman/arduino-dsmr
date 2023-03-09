@@ -32,6 +32,9 @@
 #ifndef DSMR_INCLUDE_DSMR_H
 #define DSMR_INCLUDE_DSMR_H
 
+// If in belgium, make sure the next line is uncommented
+// #define DSRM_IN_BELGIUM
+
 #include "dsmr/parser.h"
 #include "dsmr/reader.h"
 #include "dsmr/fields.h"
