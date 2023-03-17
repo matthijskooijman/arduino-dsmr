@@ -126,7 +126,11 @@ class P1Reader {
 
           char buf[CrcParser::CRC_LEN];
           for (uint8_t i = 0; i < CrcParser::CRC_LEN; ++i)
-            buf[i] = this->stream->read();
+          {
+            int c = this->stream->read();
+            buf[i] = (char)c;
+            crcBuffer.concat((char)c);
+          }
 
           ParseResult<uint16_t> crc = CrcParser::parse(buf, buf + lengthof(buf));
 
@@ -189,6 +193,13 @@ class P1Reader {
     }
 
     /**
+     * Returns the crc read so far.
+     */
+    const String &rawCrc() {
+      return crcBuffer;
+    }
+
+    /**
      * If a complete message has been received, parse it and store the
      * result into the ParsedData object passed.
      *
@@ -217,6 +228,7 @@ class P1Reader {
     void clear() {
       if (_available) {
         buffer = "";
+        crcBuffer = "";
         _available = false;
       }
     }
@@ -234,6 +246,7 @@ class P1Reader {
     bool once;
     State state;
     String buffer;
+    String crcBuffer;
     uint16_t crc;
 };
 
