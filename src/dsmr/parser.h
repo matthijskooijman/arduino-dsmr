@@ -144,8 +144,8 @@ struct ParsedData<T, Ts...> : public T, ParsedData<Ts...> {
 
 
 struct StringParser {
-  static ParseResult<String> parse_string(size_t min, size_t max, const char *str, const char *end) {
-    ParseResult<String> res;
+  static ParseResult<std::string> parse_string(size_t min, size_t max, const char *str, const char *end) {
+    ParseResult<std::string> res;
     if (str >= end || *str != '(')
       return res.fail(F("Missing ("), str);
 
